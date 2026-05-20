@@ -38,9 +38,11 @@
                             type="text"
                             class="form-control search-input"
                             placeholder="Search laptops, brands, models..."
+                            v-model="searchTerm"
+                            @keyup.enter="submitSearch"
                         >
 
-                        <button class="search-btn">
+                        <button class="search-btn" type="button" @click="submitSearch">
                             <i class="bi bi-search"></i>
                         </button>
 
@@ -51,41 +53,30 @@
                 <!-- Icons -->
                 <div class="col-lg-5">
 
-                    <div class="d-flex justify-content-lg-end justify-content-center gap-4 nav-icons flex-wrap">
+                    <div class="d-flex justify-content-lg-end justify-content-center gap-3 nav-icons flex-wrap">
 
-                        <div class="nav-item-custom">
+                        <router-link to="/compare" class="nav-item-custom position-relative text-decoration-none">
                             <i class="bi bi-grid"></i>
+                            <span class="badge-circle">{{ compareCount }}</span>
                             <span>Compare</span>
-                        </div>
+                        </router-link>
 
-                        <div class="nav-item-custom position-relative">
-
+                        <router-link to="/wishlist" class="nav-item-custom position-relative text-decoration-none">
                             <i class="bi bi-heart"></i>
-
-                            <span class="badge-circle">
-                                3
-                            </span>
-
+                            <span class="badge-circle">{{ wishlistCount }}</span>
                             <span>Wishlist</span>
+                        </router-link>
 
-                        </div>
-
-                        <div class="nav-item-custom position-relative">
-
+                        <router-link to="/cart" class="nav-item-custom position-relative text-decoration-none">
                             <i class="bi bi-cart3"></i>
-
-                            <span class="badge-circle">
-                                2
-                            </span>
-
+                            <span class="badge-circle">2</span>
                             <span>Cart</span>
+                        </router-link>
 
-                        </div>
-
-                        <div class="nav-item-custom">
+                        <router-link to="/login" class="nav-item-custom text-decoration-none">
                             <i class="bi bi-person"></i>
                             <span>Sign In</span>
-                        </div>
+                        </router-link>
 
                     </div>
 
@@ -180,6 +171,32 @@
     </header>
 </template>
 
+<script setup>
+import { ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+const searchTerm = ref(String(route.query.search || ''))
+
+watch(
+    () => route.query.search,
+    (newSearch) => {
+        searchTerm.value = String(newSearch || '')
+    }
+)
+
+const submitSearch = () => {
+    const query = {}
+
+    if (searchTerm.value.trim()) {
+        query.search = searchTerm.value.trim()
+    }
+
+    router.push({ path: '/laptops', query })
+}
+</script>
+
 <style scoped>
 header {
     background: white;
@@ -239,16 +256,28 @@ header {
 }
 
 .nav-item-custom {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
     color: #111827;
     cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 14px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-item-custom:hover {
+    background: #f8fafc;
+    color: #2563eb;
+}
+
+.nav-item-custom span {
+    font-weight: 600;
 }
 
 .badge-circle {
     position: absolute;
-    top: -10px;
+    top: -8px;
     left: 12px;
     background: #2563eb;
     color: white;

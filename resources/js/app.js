@@ -13,10 +13,13 @@ import Accessories from './pages/Accessories.vue'
 import Deals from './pages/Deals.vue'
 import Support from './pages/Support.vue'
 import Categories from './pages/Categories.vue'
-import ProductDetails
-from './pages/ProductDetails.vue'
-import Cart
-from './pages/Cart.vue'
+import Compare from './pages/Compare.vue'
+import Wishlist from './pages/Wishlist.vue'
+import Dashboard from './pages/Dashboard.vue'
+import Login from './pages/Login.vue'
+import Register from './pages/Register.vue'
+import ProductDetails from './pages/ProductDetails.vue'
+import Cart from './pages/Cart.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -56,6 +59,27 @@ const router = createRouter({
             component: Categories,
         },
         {
+            path: '/compare',
+            component: Compare,
+        },
+        {
+            path: '/wishlist',
+            component: Wishlist,
+        },
+        {
+            path: '/dashboard',
+            component: Dashboard,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/login',
+            component: Login,
+        },
+        {
+            path: '/register',
+            component: Register,
+        },
+        {
             path: '/product/:id',
             component: ProductDetails
         },
@@ -64,6 +88,16 @@ const router = createRouter({
             component: Cart
         }
     ],
+})
+
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('api_token')
+
+    if (to.meta.requiresAuth && !token) {
+        return next({ path: '/login' })
+    }
+
+    return next()
 })
 
 createApp(App)

@@ -115,7 +115,7 @@ const getCart = async () => {
 
     const response =
         await axios.get(
-            'http://127.0.0.1:8000/api/cart'
+            '/api/cart'
         )
 
     cart.value =
@@ -126,7 +126,7 @@ const removeItem =
 async (id) => {
 
     await axios.delete(
-        `http://127.0.0.1:8000/api/cart/${id}`
+        `/api/cart/${id}`
     )
 
     getCart()

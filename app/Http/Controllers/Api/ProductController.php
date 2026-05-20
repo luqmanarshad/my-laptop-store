@@ -4,20 +4,170 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with([
+        $brands = Arr::wrap($request->query('brand'));
+        $categories = Arr::wrap($request->query('category'));
+        $search = $request->query('search');
+        $maxPrice = $request->query('max_price');
+        $sort = $request->query('sort', 'latest');
+        $perPage = max((int) $request->query('per_page', 12), 1);
+
+        $query = Product::with([
             'brand',
             'category',
             'images',
             'specification'
-        ])->get();
+        ]);
 
-        return response()->json($products);
+        if (!empty($brands)) {
+            $query->whereHas('brand', function ($q) use ($brands) {
+                $q->whereIn('name', $brands);
+            });
+        }
+
+        if (!empty($categories)) {
+            $query->whereHas('category', function ($q) use ($categories) {
+                $q->whereIn('name', $categories);
+            });
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($maxPrice) {
+            $query->where(function ($q) use ($maxPrice) {
+                $q->where('sale_price', '<=', $maxPrice)
+                    ->orWhere(function ($q2) use ($maxPrice) {
+                        $q2->whereNull('sale_price')
+                            ->where('price', '<=', $maxPrice);
+                    });
+            });
+        }
+
+        if ($sort === 'low') {
+            $query->orderByRaw('COALESCE(sale_price, price) asc');
+        } elseif ($sort === 'high') {
+            $query->orderByRaw('COALESCE(sale_price, price) desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        if ($request->boolean('all')) {
+            return response()->json($query->get());
+        }
+
+        return response()->json($query->paginate($perPage));
     }
+
+    public function filters(Request $request)
+    {
+        $search = $request->query('search');
+        $maxPrice = $request->query('max_price');
+        $selectedBrands = Arr::wrap($request->query('brand'));
+        $selectedCategories = Arr::wrap($request->query('category'));
+
+        $brandQuery = Product::query()
+            ->join('brands', 'products.brand_id', '=', 'brands.id')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->select('brands.name', DB::raw('COUNT(*) as count'))
+            ->groupBy('brands.name')
+            ->orderBy('brands.name');
+
+        $categoryQuery = Product::query()
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
+            ->select('categories.name', DB::raw('COUNT(*) as count'))
+            ->groupBy('categories.name')
+            ->orderBy('categories.name');
+
+        $rangeQuery = Product::query();
+
+        if ($search) {
+            $brandQuery->where(function ($q) use ($search) {
+                $q->where('products.title', 'like', "%{$search}%")
+                    ->orWhere('products.description', 'like', "%{$search}%");
+            });
+            $categoryQuery->where(function ($q) use ($search) {
+                $q->where('products.title', 'like', "%{$search}%")
+                    ->orWhere('products.description', 'like', "%{$search}%");
+            });
+            $rangeQuery->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($maxPrice) {
+            $brandQuery->where(function ($q) use ($maxPrice) {
+                $q->where('products.sale_price', '<=', $maxPrice)
+                    ->orWhere(function ($q2) use ($maxPrice) {
+                        $q2->whereNull('products.sale_price')
+                            ->where('products.price', '<=', $maxPrice);
+                    });
+            });
+            $categoryQuery->where(function ($q) use ($maxPrice) {
+                $q->where('products.sale_price', '<=', $maxPrice)
+                    ->orWhere(function ($q2) use ($maxPrice) {
+                        $q2->whereNull('products.sale_price')
+                            ->where('products.price', '<=', $maxPrice);
+                    });
+            });
+        }
+
+        if (!empty($selectedCategories)) {
+            $brandQuery->whereIn('categories.name', $selectedCategories);
+            $rangeQuery->whereHas('category', function ($q) use ($selectedCategories) {
+                $q->whereIn('name', $selectedCategories);
+            });
+        }
+
+        if (!empty($selectedBrands)) {
+            $categoryQuery->whereIn('brands.name', $selectedBrands);
+            $rangeQuery->whereHas('brand', function ($q) use ($selectedBrands) {
+                $q->whereIn('name', $selectedBrands);
+            });
+        }
+
+        $brands = $brandQuery->get()->map(function ($item) {
+            return [
+                'name' => $item->name,
+                'count' => $item->count,
+            ];
+        });
+
+        $categories = $categoryQuery->get()->map(function ($item) {
+            return [
+                'name' => $item->name,
+                'count' => $item->count,
+            ];
+        });
+
+        $priceRange = $rangeQuery
+            ->selectRaw('MIN(COALESCE(sale_price, price)) as min_price, MAX(COALESCE(sale_price, price)) as max_price')
+            ->first();
+
+        return response()->json([
+            'brands' => $brands,
+            'categories' => $categories,
+            'price_range' => [
+                'min' => $priceRange->min_price ?? 0,
+                'max' => $priceRange->max_price ?? 0,
+            ],
+        ]);
+    }
+
     public function show($id)
     {
         $product = Product::with([
@@ -30,5 +180,63 @@ class ProductController extends Controller
         return response()->json(
             $product
         );
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'brand_id' => ['required', 'integer', 'exists:brands,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price' => ['required', 'numeric'],
+            'sale_price' => ['nullable', 'numeric'],
+            'stock' => ['required', 'integer'],
+            'sku' => ['nullable', 'string', 'max:255'],
+            'thumbnail' => ['nullable', 'string', 'max:255'],
+            'featured' => ['boolean'],
+            'status' => ['boolean'],
+        ]);
+
+        $data['slug'] = Str::slug($data['title']) . '-' . substr(uniqid(), -6);
+
+        $product = Product::create($data);
+
+        return response()->json($product, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $data = $request->validate([
+            'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
+            'brand_id' => ['sometimes', 'required', 'integer', 'exists:brands,id'],
+            'title' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price' => ['sometimes', 'required', 'numeric'],
+            'sale_price' => ['nullable', 'numeric'],
+            'stock' => ['sometimes', 'required', 'integer'],
+            'sku' => ['nullable', 'string', 'max:255'],
+            'thumbnail' => ['nullable', 'string', 'max:255'],
+            'featured' => ['boolean'],
+            'status' => ['boolean'],
+        ]);
+
+        if (isset($data['title'])) {
+            $data['slug'] = Str::slug($data['title']) . '-' . substr(uniqid(), -6);
+        }
+
+        $product->update($data);
+
+        return response()->json($product);
+    }
+
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted']);
     }
 }

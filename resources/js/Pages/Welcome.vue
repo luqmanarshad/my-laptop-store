@@ -67,18 +67,36 @@
                 <div class="col-lg-9">
 
                     <div
-                        class="d-flex justify-content-between align-items-center mb-4"
+                        class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
                     >
 
-                        <h2 class="fw-bold">
-                            Popular Laptops
-                        </h2>
+                        <div>
+                            <h2 class="fw-bold">
+                                Popular Laptops
+                            </h2>
+                            <p class="text-muted mb-0">{{ message }}</p>
+                        </div>
 
-                        <button
-                            class="btn btn-outline-primary rounded-pill px-4"
-                        >
-                            View All
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            <input
+                                type="search"
+                                class="form-control search-input"
+                                placeholder="Search popular laptops..."
+                                v-model="searchQuery"
+                                @keyup.enter="searchProducts"
+                            />
+
+                            <button class="btn btn-primary" type="button" @click="searchProducts">
+                                Search
+                            </button>
+
+                            <router-link
+                                to="/laptops"
+                                class="btn btn-outline-primary rounded-pill px-4"
+                            >
+                                View All
+                            </router-link>
+                        </div>
 
                     </div>
 
@@ -110,8 +128,10 @@
                                 <ProductCard
                                     :title="product.title"
                                     :brand="product.brand?.name"
-                                    :price="product.sale_price"
-                                    :image="product.thumbnail"
+                                    :price="product.sale_price || product.price"
+                                    :image="product.thumbnail || product.images?.[0]?.image"
+                                    @toggle-wishlist="addToWishlist(product)"
+                                    @toggle-compare="addToCompare(product)"
                                 />
 
                             </router-link>
@@ -137,33 +157,53 @@ import MainLayout from '../Layouts/MainLayout.vue'
 import HeroSlider from '../Components/HeroSlider.vue'
 import ProductCard from '../Components/ProductCard.vue'
 import FeatureBar from '../Components/FeatureBar.vue'
+import { addItem } from '../utils/localList'
 
 const products = ref([])
 const loading = ref(true)
+const searchQuery = ref('')
+const message = ref('Popular laptops hand-picked for you.')
 
-const getProducts = async () => {
+const getProducts = async (params = {}) => {
+    loading.value = true
 
     try {
+        const response = await axios.get('/api/products', {
+            params: {
+                per_page: 8,
+                ...params,
+            },
+        })
 
-        const response = await axios.get(
-            'http://127.0.0.1:8000/api/products'
-        )
+        products.value = response.data.data
 
-        products.value = response.data
-
-        console.log(response.data)
-
+        if (!products.value.length) {
+            message.value = searchQuery.value
+                ? 'No products found for that search.'
+                : 'No products are currently available.'
+        } else {
+            message.value = searchQuery.value
+                ? `Showing results for "${searchQuery.value}".`
+                : 'Popular laptops hand-picked for you.'
+        }
     } catch (error) {
-
-        console.error(
-            'API Error:',
-            error
-        )
-
+        console.error('API Error:', error)
+        message.value = 'Unable to load popular laptops right now.'
     } finally {
-
         loading.value = false
     }
+}
+
+const searchProducts = async () => {
+    await getProducts({ search: searchQuery.value || undefined })
+}
+
+const addToWishlist = (product) => {
+    addItem('wishlist', product)
+}
+
+const addToCompare = (product) => {
+    addItem('compare', product)
 }
 
 onMounted(() => {

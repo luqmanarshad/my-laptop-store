@@ -1,25 +1,34 @@
 <template>
     <div class="product-card card border-0 rounded-4 h-100 overflow-hidden">
 
-        <!-- Wishlist -->
-        <button class="wishlist-btn">
-            <i class="bi bi-heart"></i>
-        </button>
+        <div class="product-actions">
+            <button
+                class="icon-btn compare-btn"
+                type="button"
+                @click.stop="$emit('toggle-compare')"
+            >
+                <i class="bi bi-bar-chart-fill"></i>
+            </button>
+            <button
+                class="icon-btn wishlist-btn"
+                type="button"
+                @click.stop="$emit('toggle-wishlist')"
+            >
+                <i class="bi bi-heart"></i>
+            </button>
+        </div>
 
         <!-- Product Image -->
         <div class="product-image-wrapper">
-
             <img
                 :src="image"
                 class="product-image"
                 :alt="title"
             />
-
         </div>
 
         <!-- Content -->
         <div class="card-body pt-0 d-flex flex-column">
-
             <h5 class="product-title">
                 {{ title }}
             </h5>
@@ -30,9 +39,7 @@
 
             <!-- Price -->
             <div class="mb-3">
-
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-
                     <span class="current-price">
                         ${{ price }}
                     </span>
@@ -44,19 +51,14 @@
                     <span class="discount-badge">
                         15% OFF
                     </span>
-
                 </div>
-
             </div>
 
-            <!-- Button -->
-            <button class="btn add-cart-btn mt-auto">
+            <button class="btn add-cart-btn mt-auto" type="button">
                 <i class="bi bi-cart3 me-2"></i>
                 Add to Cart
             </button>
-
         </div>
-
     </div>
 </template>
 
@@ -101,16 +103,31 @@ defineProps({
     transform: scale(1.05);
 }
 
-.wishlist-btn {
+.product-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
     position: absolute;
     top: 18px;
     right: 18px;
+    z-index: 5;
+}
+
+.icon-btn {
     border: none;
     width: 40px;
     height: 40px;
     border-radius: 50%;
     background: #f8f9fa;
-    z-index: 5;
+    color: #111827;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    background: #e2e8f0;
 }
 
 .product-title {

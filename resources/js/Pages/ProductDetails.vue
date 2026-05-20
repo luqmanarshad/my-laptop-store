@@ -132,7 +132,7 @@ const addToCart = async () => {
 
         const response =
             await axios.post(
-                'http://127.0.0.1:8000/api/cart/add',
+                '/api/cart/add',
                 {
                     product_id:
                         product.value.id
@@ -152,7 +152,7 @@ const getProduct = async () => {
 
     const response =
         await axios.get(
-            `http://127.0.0.1:8000/api/products/${route.params.id}`
+            `/api/products/${route.params.id}`
         )
 
     product.value =
