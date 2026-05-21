@@ -22,7 +22,7 @@ class ProductSeeder extends Seeder
                 'brand' => 'ASUS',
                 'category' => 'Gaming Laptops',
                 'image' =>
-                    'https://dlcdnwebimgs.asus.com/gain/90C2C48B-AB4A-4975-A77A-C1E1A7701F92/w717/h525',
+                    'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&auto=format&fit=crop&q=60',
             ],
 
             [
@@ -31,7 +31,7 @@ class ProductSeeder extends Seeder
                 'brand' => 'Apple',
                 'category' => 'MacBooks',
                 'image' =>
-                    'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/macbook-air-midnight-gallery1-202206',
+                    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=60',
             ],
 
             [
@@ -40,7 +40,7 @@ class ProductSeeder extends Seeder
                 'brand' => 'Dell',
                 'category' => 'Business Laptops',
                 'image' =>
-                    'https://i.dell.com/is/image/DellContent/content/dam/images/products/laptops-and-2-in-1s/xps/13-9340/media-gallery/laptop-xps-13-9340-gray-gallery-2.psd',
+                    'https://images.unsplash.com/photo-1496181130204-755241544e35?w=600&auto=format&fit=crop&q=60',
             ],
 
             [
@@ -49,7 +49,7 @@ class ProductSeeder extends Seeder
                 'brand' => 'HP',
                 'category' => 'Gaming Laptops',
                 'image' =>
-                    'https://ssl-product-images.www8-hp.com/digmedialib/prodimg/lowres/c08470648.png',
+                    'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=600&auto=format&fit=crop&q=60',
             ],
 
             [
@@ -58,7 +58,7 @@ class ProductSeeder extends Seeder
                 'brand' => 'Lenovo',
                 'category' => 'Business Laptops',
                 'image' =>
-                    'https://p4-ofp.static.pub/fes/cms/2023/05/18/rx2r4iv0y9zkhkq4v4s5v2nlf4s3g551.png',
+                    'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&auto=format&fit=crop&q=60',
             ],
         ];
 

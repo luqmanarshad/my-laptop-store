@@ -4,17 +4,21 @@
         <div class="product-actions">
             <button
                 class="icon-btn compare-btn"
+                :class="{ 'active-compare': store.isInCompare(product.id) }"
                 type="button"
-                @click.stop="$emit('toggle-compare')"
+                @click.stop.prevent="store.toggleCompare(product)"
+                v-if="product"
             >
-                <i class="bi bi-bar-chart-fill"></i>
+                <i class="bi bi-bar-chart-fill" :class="{ 'text-primary': store.isInCompare(product.id) }"></i>
             </button>
             <button
                 class="icon-btn wishlist-btn"
+                :class="{ 'active-wishlist': store.isInWishlist(product.id) }"
                 type="button"
-                @click.stop="$emit('toggle-wishlist')"
+                @click.stop.prevent="store.toggleWishlist(product)"
+                v-if="product"
             >
-                <i class="bi bi-heart"></i>
+                <i class="bi" :class="store.isInWishlist(product.id) ? 'bi-heart-fill text-danger' : 'bi-heart'"></i>
             </button>
         </div>
 
@@ -29,11 +33,11 @@
 
         <!-- Content -->
         <div class="card-body pt-0 d-flex flex-column">
-            <h5 class="product-title">
+            <h5 class="product-title text-truncate">
                 {{ title }}
             </h5>
 
-            <p class="product-specs mb-2">
+            <p class="product-specs mb-2 text-muted text-truncate" style="min-height: auto;">
                 {{ brand }}
             </p>
 
@@ -41,20 +45,24 @@
             <div class="mb-3">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="current-price">
-                        ${{ price }}
+                        ${{ product.sale_price || product.price }}
                     </span>
 
-                    <span class="old-price">
-                        ${{ Math.floor(price + 250) }}
+                    <span v-if="product.sale_price" class="old-price text-decoration-line-through text-muted small">
+                        ${{ product.price }}
                     </span>
 
-                    <span class="discount-badge">
+                    <span v-if="product.sale_price" class="discount-badge">
                         15% OFF
                     </span>
                 </div>
             </div>
 
-            <button class="btn add-cart-btn mt-auto" type="button">
+            <button 
+                class="btn add-cart-btn mt-auto w-100" 
+                type="button"
+                @click.stop.prevent="product && store.addToCart(product.id)"
+            >
                 <i class="bi bi-cart3 me-2"></i>
                 Add to Cart
             </button>
@@ -63,11 +71,15 @@
 </template>
 
 <script setup>
+import { store } from '../utils/store'
+
 defineProps({
+    id: [Number, String],
     title: String,
     brand: String,
     image: String,
     price: Number,
+    product: Object
 })
 </script>
 
@@ -188,9 +200,9 @@ defineProps({
     }
 
     .current-price {
-    font-size: 34px;
-    font-weight: 800;
-}
+        font-size: 20px;
+        font-weight: 800;
+    }
 
 }
 </style>

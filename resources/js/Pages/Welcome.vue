@@ -126,12 +126,11 @@
                             >
 
                                 <ProductCard
+                                    :product="product"
                                     :title="product.title"
                                     :brand="product.brand?.name"
                                     :price="product.sale_price || product.price"
                                     :image="product.thumbnail || product.images?.[0]?.image"
-                                    @toggle-wishlist="addToWishlist(product)"
-                                    @toggle-compare="addToCompare(product)"
                                 />
 
                             </router-link>

@@ -54,6 +54,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { store } from '../utils/store'
 
 const router = useRouter()
 const form = ref({
@@ -76,7 +77,14 @@ const submitLogin = async () => {
     localStorage.setItem('api_token', response.data.token)
     axios.defaults.headers.common.Authorization = `Bearer ${response.data.token}`
 
-    router.push('/dashboard')
+    await store.fetchUser()
+    store.addToast(`Welcome back, ${store.user?.name || 'User'}!`, 'success')
+
+    if (store.user?.email === 'admin@example.com') {
+      router.push('/dashboard')
+    } else {
+      router.push('/')
+    }
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Login failed. Please check your credentials.'
   } finally {

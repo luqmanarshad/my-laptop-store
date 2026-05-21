@@ -57,23 +57,50 @@
 
                         <router-link to="/compare" class="nav-item-custom position-relative text-decoration-none">
                             <i class="bi bi-grid"></i>
-                            <span class="badge-circle">{{ compareCount }}</span>
+                            <span class="badge-circle">{{ store.compare.length }}</span>
                             <span>Compare</span>
                         </router-link>
 
                         <router-link to="/wishlist" class="nav-item-custom position-relative text-decoration-none">
                             <i class="bi bi-heart"></i>
-                            <span class="badge-circle">{{ wishlistCount }}</span>
+                            <span class="badge-circle">{{ store.wishlist.length }}</span>
                             <span>Wishlist</span>
                         </router-link>
 
                         <router-link to="/cart" class="nav-item-custom position-relative text-decoration-none">
                             <i class="bi bi-cart3"></i>
-                            <span class="badge-circle">2</span>
+                            <span class="badge-circle">{{ store.cart.length }}</span>
                             <span>Cart</span>
                         </router-link>
 
-                        <router-link to="/login" class="nav-item-custom text-decoration-none">
+                        <!-- User Authentication Menu -->
+                        <div v-if="store.user" class="position-relative d-inline-block">
+                            <button @click="toggleUserDropdown" class="nav-item-custom border-0 bg-transparent align-items-center" type="button">
+                                <i class="bi bi-person-circle text-primary"></i>
+                                <span>{{ store.user.name.split(' ')[0] }}</span>
+                                <i class="bi bi-chevron-down ms-1" style="font-size: 10px;"></i>
+                            </button>
+                            <ul v-if="userDropdownOpen" class="dropdown-menu show dropdown-menu-end border-0 shadow p-2 rounded-4 position-absolute end-0 mt-2 animate-dropdown" style="background: rgba(255, 255, 255, 0.98); box-shadow: 0 15px 40px rgba(0,0,0,0.12) !important; min-width: 180px; z-index: 1000;">
+                                <li>
+                                    <router-link to="/orders" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold">
+                                        <i class="bi bi-bag-check me-2"></i> My Orders
+                                    </router-link>
+                                </li>
+                                <li v-if="store.user.email === 'admin@example.com'">
+                                    <router-link to="/dashboard" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-primary">
+                                        <i class="bi bi-speedometer2 me-2"></i> Admin Panel
+                                    </router-link>
+                                </li>
+                                <li><hr class="dropdown-divider border-light"></li>
+                                <li>
+                                    <button @click="handleSignOut" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-danger border-0 bg-transparent w-100 text-start">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <router-link v-else to="/login" class="nav-item-custom text-decoration-none">
                             <i class="bi bi-person"></i>
                             <span>Sign In</span>
                         </router-link>
@@ -174,10 +201,20 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { store } from '../utils/store'
 
 const router = useRouter()
 const route = useRoute()
 const searchTerm = ref(String(route.query.search || ''))
+
+const userDropdownOpen = ref(false)
+const toggleUserDropdown = () => {
+    userDropdownOpen.value = !userDropdownOpen.value
+}
+const handleSignOut = () => {
+    userDropdownOpen.value = false
+    store.logout()
+}
 
 watch(
     () => route.query.search,
@@ -319,6 +356,22 @@ header {
     padding: 12px 22px;
     border-radius: 14px;
     font-weight: 600;
+}
+
+.animate-dropdown {
+    animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: top right;
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @media(max-width:991px) {

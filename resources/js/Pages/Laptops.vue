@@ -174,12 +174,11 @@
                                     class="text-decoration-none d-block h-100"
                                 >
                                     <ProductCard
+                                        :product="product"
                                         :title="product.title"
                                         :brand="product.brand?.name"
                                         :price="product.sale_price || product.price"
                                         :image="product.thumbnail || product.images?.[0]?.image"
-                                        @toggle-wishlist="toggleWishlist(product)"
-                                        @toggle-compare="toggleCompare(product)"
                                     />
                                 </router-link>
                             </div>
@@ -452,6 +451,12 @@ const goToPage = (page) => {
 }
 
 onMounted(() => {
+    if (route.query.brand) {
+        selectedBrands.value = Array.isArray(route.query.brand) ? route.query.brand : [route.query.brand]
+    }
+    if (route.query.category) {
+        selectedCategories.value = Array.isArray(route.query.category) ? route.query.category : [route.query.category]
+    }
     getFilterMetadata()
     getProducts()
 })

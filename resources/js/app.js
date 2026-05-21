@@ -20,6 +20,8 @@ import Login from './pages/Login.vue'
 import Register from './pages/Register.vue'
 import ProductDetails from './pages/ProductDetails.vue'
 import Cart from './pages/Cart.vue'
+import Orders from './Pages/Orders.vue'
+import { store } from './utils/store'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -86,9 +88,16 @@ const router = createRouter({
         {
             path: '/cart',
             component: Cart
+        },
+        {
+            path: '/orders',
+            component: Orders,
+            meta: { requiresAuth: true }
         }
     ],
 })
+
+store.router = router
 
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('api_token')

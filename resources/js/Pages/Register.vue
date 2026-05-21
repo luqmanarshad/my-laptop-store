@@ -76,6 +76,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { store } from '../utils/store'
 
 const router = useRouter()
 const form = ref({
@@ -102,7 +103,10 @@ const submitRegister = async () => {
     localStorage.setItem('api_token', response.data.token)
     axios.defaults.headers.common.Authorization = `Bearer ${response.data.token}`
 
-    router.push('/dashboard')
+    await store.fetchUser()
+    store.addToast(`Account created successfully! Welcome, ${store.user?.name}!`, 'success')
+
+    router.push('/')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Registration failed. Please check your information.'
   } finally {

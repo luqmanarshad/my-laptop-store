@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -184,6 +185,10 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        if (Auth::user()->email !== 'admin@example.com') {
+            return response()->json(['message' => 'Unauthorized. Admin access only.'], 403);
+        }
+
         $data = $request->validate([
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'brand_id' => ['required', 'integer', 'exists:brands,id'],
@@ -196,17 +201,38 @@ class ProductController extends Controller
             'thumbnail' => ['nullable', 'string', 'max:255'],
             'featured' => ['boolean'],
             'status' => ['boolean'],
+            // Specifications
+            'processor' => ['nullable', 'string', 'max:255'],
+            'ram' => ['nullable', 'string', 'max:255'],
+            'storage' => ['nullable', 'string', 'max:255'],
+            'graphics' => ['nullable', 'string', 'max:255'],
+            'display' => ['nullable', 'string', 'max:255'],
+            'battery' => ['nullable', 'string', 'max:255'],
+            'os' => ['nullable', 'string', 'max:255'],
+            'weight' => ['nullable', 'string', 'max:255'],
+            'custom_specs' => ['nullable', 'array'],
         ]);
 
-        $data['slug'] = Str::slug($data['title']) . '-' . substr(uniqid(), -6);
+        $productData = Arr::except($data, ['processor', 'ram', 'storage', 'graphics', 'display', 'battery', 'os', 'weight', 'custom_specs']);
+        $specData = Arr::only($data, ['processor', 'ram', 'storage', 'graphics', 'display', 'battery', 'os', 'weight', 'custom_specs']);
 
-        $product = Product::create($data);
+        $productData['slug'] = Str::slug($productData['title']) . '-' . substr(uniqid(), -6);
 
-        return response()->json($product, 201);
+        $product = DB::transaction(function () use ($productData, $specData) {
+            $product = Product::create($productData);
+            $product->specification()->create($specData);
+            return $product;
+        });
+
+        return response()->json($product->load('specification'), 201);
     }
 
     public function update(Request $request, $id)
     {
+        if (Auth::user()->email !== 'admin@example.com') {
+            return response()->json(['message' => 'Unauthorized. Admin access only.'], 403);
+        }
+
         $product = Product::findOrFail($id);
 
         $data = $request->validate([
@@ -221,19 +247,41 @@ class ProductController extends Controller
             'thumbnail' => ['nullable', 'string', 'max:255'],
             'featured' => ['boolean'],
             'status' => ['boolean'],
+            // Specifications
+            'processor' => ['nullable', 'string', 'max:255'],
+            'ram' => ['nullable', 'string', 'max:255'],
+            'storage' => ['nullable', 'string', 'max:255'],
+            'graphics' => ['nullable', 'string', 'max:255'],
+            'display' => ['nullable', 'string', 'max:255'],
+            'battery' => ['nullable', 'string', 'max:255'],
+            'os' => ['nullable', 'string', 'max:255'],
+            'weight' => ['nullable', 'string', 'max:255'],
+            'custom_specs' => ['nullable', 'array'],
         ]);
 
-        if (isset($data['title'])) {
-            $data['slug'] = Str::slug($data['title']) . '-' . substr(uniqid(), -6);
+        $productData = Arr::except($data, ['processor', 'ram', 'storage', 'graphics', 'display', 'battery', 'os', 'weight', 'custom_specs']);
+        $specData = Arr::only($data, ['processor', 'ram', 'storage', 'graphics', 'display', 'battery', 'os', 'weight', 'custom_specs']);
+
+        if (isset($productData['title'])) {
+            $productData['slug'] = Str::slug($productData['title']) . '-' . substr(uniqid(), -6);
         }
 
-        $product->update($data);
+        DB::transaction(function () use ($product, $productData, $specData) {
+            $product->update($productData);
+            if (!empty($specData)) {
+                $product->specification()->updateOrCreate([], $specData);
+            }
+        });
 
-        return response()->json($product);
+        return response()->json($product->load('specification'));
     }
 
     public function destroy($id)
     {
+        if (Auth::user()->email !== 'admin@example.com') {
+            return response()->json(['message' => 'Unauthorized. Admin access only.'], 403);
+        }
+
         $product = Product::findOrFail($id);
         $product->delete();
 

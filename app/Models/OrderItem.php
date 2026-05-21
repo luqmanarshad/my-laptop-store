@@ -5,26 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Specification extends Model
+class OrderItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'order_id',
         'product_id',
-        'processor',
-        'ram',
-        'storage',
-        'graphics',
-        'display',
-        'battery',
-        'os',
-        'weight',
-        'custom_specs',
+        'quantity',
+        'price',
     ];
 
-    protected $casts = [
-        'custom_specs' => 'array',
-    ];
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 
     public function product()
     {
