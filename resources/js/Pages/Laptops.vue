@@ -239,7 +239,8 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import { db } from '../firebase_config'
+import { collection, getDocs } from 'firebase/firestore'
 import { addItem, removeItem, hasItem } from '../utils/localList'
 
 import MainLayout from '../Layouts/MainLayout.vue'
@@ -261,32 +262,15 @@ const pagination = ref({})
 const priceRange = ref({ min: 0, max: 0 })
 
 const availableBrands = computed(() => brands.value)
-
 const availableCategories = computed(() => categories.value)
 
 const activeFilters = computed(() => {
     const filters = []
-
-    if (searchQuery.value.trim()) {
-        filters.push(`Search: ${searchQuery.value.trim()}`)
-    }
-
-    if (selectedBrands.value.length) {
-        filters.push(`Brand: ${selectedBrands.value.join(', ')}`)
-    }
-
-    if (selectedCategories.value.length) {
-        filters.push(`Category: ${selectedCategories.value.join(', ')}`)
-    }
-
-    if (selectedPriceMax.value < priceRange.value.max) {
-        filters.push(`Price up to $${selectedPriceMax.value}`)
-    }
-
-    if (selectedSort.value !== 'latest') {
-        filters.push(selectedSort.value === 'low' ? 'Price: Low to High' : 'Price: High to Low')
-    }
-
+    if (searchQuery.value.trim()) filters.push(`Search: ${searchQuery.value.trim()}`)
+    if (selectedBrands.value.length) filters.push(`Brand: ${selectedBrands.value.join(', ')}`)
+    if (selectedCategories.value.length) filters.push(`Category: ${selectedCategories.value.join(', ')}`)
+    if (selectedPriceMax.value < priceRange.value.max) filters.push(`Price up to $${selectedPriceMax.value}`)
+    if (selectedSort.value !== 'latest') filters.push(selectedSort.value === 'low' ? 'Price: Low to High' : 'Price: High to Low')
     return filters
 })
 
@@ -308,18 +292,6 @@ const toggleCompare = (product) => {
 
 const productCount = computed(() => pagination.value.total || products.value.length)
 
-const buildQueryParams = () => {
-    return {
-        search: searchQuery.value || undefined,
-        brand: selectedBrands.value.length ? selectedBrands.value : undefined,
-        category: selectedCategories.value.length ? selectedCategories.value : undefined,
-        max_price: selectedPriceMax.value || undefined,
-        sort: selectedSort.value !== 'latest' ? selectedSort.value : undefined,
-        page: currentPage.value,
-        per_page: perPage.value,
-    }
-}
-
 const clearFilters = () => {
     selectedBrands.value = []
     selectedCategories.value = []
@@ -335,7 +307,6 @@ const updatePriceRange = (minPrice = 0, maxPrice = 0) => {
         selectedPriceMax.value = 0
         return
     }
-
     priceRange.value = { min: minPrice, max: maxPrice }
     if (selectedPriceMax.value === 0 || selectedPriceMax.value > maxPrice) {
         selectedPriceMax.value = maxPrice
@@ -344,14 +315,38 @@ const updatePriceRange = (minPrice = 0, maxPrice = 0) => {
 
 const getProducts = async () => {
     loading.value = true
-
     try {
-        const response = await axios.get('/api/products', {
-            params: buildQueryParams(),
+        const querySnapshot = await getDocs(collection(db, "products"))
+        let prods = []
+        querySnapshot.forEach((doc) => {
+            prods.push({ id: doc.id, ...doc.data() })
         })
 
-        products.value = response.data.data
-        pagination.value = response.data
+        if (searchQuery.value) {
+            prods = prods.filter(p => p.title?.toLowerCase().includes(searchQuery.value.toLowerCase()))
+        }
+        if (selectedBrands.value.length) {
+            prods = prods.filter(p => p.brand && selectedBrands.value.includes(p.brand.name))
+        }
+        if (selectedCategories.value.length) {
+            prods = prods.filter(p => p.category && selectedCategories.value.includes(p.category.name))
+        }
+        if (selectedPriceMax.value && selectedPriceMax.value < priceRange.value.max) {
+             prods = prods.filter(p => (p.sale_price || p.price) <= selectedPriceMax.value)
+        }
+
+        if (selectedSort.value === 'low') {
+             prods.sort((a, b) => (a.sale_price || a.price) - (b.sale_price || b.price))
+        } else if (selectedSort.value === 'high') {
+             prods.sort((a, b) => (b.sale_price || b.price) - (a.sale_price || a.price))
+        }
+
+        products.value = prods
+        pagination.value = {
+            total: prods.length,
+            current_page: 1,
+            last_page: 1
+        }
     } catch (error) {
         console.error('Unable to load laptops:', error)
     } finally {
@@ -360,24 +355,20 @@ const getProducts = async () => {
 }
 
 const getFilterMetadata = async () => {
-    try {
-        const response = await axios.get('/api/products/filters', {
-            params: {
-                search: searchQuery.value || undefined,
-                brand: selectedBrands.value.length ? selectedBrands.value : undefined,
-                category: selectedCategories.value.length ? selectedCategories.value : undefined,
-                max_price: selectedPriceMax.value || undefined,
-            },
-        })
-
-        brands.value = response.data.brands || []
-        categories.value = response.data.categories || []
-
-        const { min, max } = response.data.price_range || { min: 0, max: 0 }
-        updatePriceRange(min, max)
-    } catch (error) {
-        console.error('Unable to load product filter options:', error)
-    }
+    brands.value = [
+        { name: 'Apple', count: 1 },
+        { name: 'HP', count: 1 },
+        { name: 'Dell', count: 1 },
+        { name: 'Lenovo', count: 1 },
+        { name: 'ASUS', count: 1 }
+    ]
+    categories.value = [
+        { name: 'Gaming', count: 1 },
+        { name: 'Business', count: 1 },
+        { name: 'Student', count: 1 },
+        { name: 'Creator', count: 1 }
+    ]
+    updatePriceRange(0, 5000)
 }
 
 watch([
@@ -386,8 +377,6 @@ watch([
     selectedPriceMax,
     searchQuery,
 ], async () => {
-    await getFilterMetadata()
-
     if (currentPage.value !== 1) {
         currentPage.value = 1
     } else {
@@ -412,55 +401,20 @@ watch([
 
 watch(currentPage, getProducts)
 
-const hasPreviousPage = computed(() => pagination.value.current_page > 1)
-const hasNextPage = computed(() => pagination.value.current_page < pagination.value.last_page)
-
-const pageNumbers = computed(() => {
-    const last = pagination.value.last_page || 1
-    const current = currentPage.value
-    const delta = 2
-    const range = []
-
-    for (let i = Math.max(1, current - delta); i <= Math.min(last, current + delta); i += 1) {
-        range.push(i)
-    }
-
-    if (range[0] > 2) {
-        range.unshift('...')
-        range.unshift(1)
-    } else if (range[0] === 2) {
-        range.unshift(1)
-    }
-
-    if (range[range.length - 1] < last - 1) {
-        range.push('...')
-        range.push(last)
-    } else if (range[range.length - 1] === last - 1) {
-        range.push(last)
-    }
-
-    return range
-})
+const hasPreviousPage = computed(() => false)
+const hasNextPage = computed(() => false)
+const pageNumbers = computed(() => [1])
 
 const goToPage = (page) => {
-    if (page === '...' || page < 1 || page > pagination.value.last_page) {
-        return
-    }
-
-    currentPage.value = page
+    currentPage.value = 1
 }
 
 onMounted(() => {
-    if (route.query.brand) {
-        selectedBrands.value = Array.isArray(route.query.brand) ? route.query.brand : [route.query.brand]
-    }
-    if (route.query.category) {
-        selectedCategories.value = Array.isArray(route.query.category) ? route.query.category : [route.query.category]
-    }
+    if (route.query.brand) selectedBrands.value = Array.isArray(route.query.brand) ? route.query.brand : [route.query.brand]
+    if (route.query.category) selectedCategories.value = Array.isArray(route.query.category) ? route.query.category : [route.query.category]
     getFilterMetadata()
     getProducts()
 })
-
 </script>
 
 <style scoped>

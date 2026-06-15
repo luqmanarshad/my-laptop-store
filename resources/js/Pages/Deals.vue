@@ -43,7 +43,8 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import { db } from '../firebase_config'
+import { collection, getDocs } from 'firebase/firestore'
 import MainLayout from '../Layouts/MainLayout.vue'
 import ProductCard from '../Components/ProductCard.vue'
 
@@ -53,8 +54,12 @@ const loading = ref(true)
 const fetchDeals = async () => {
     loading.value = true
     try {
-        const response = await axios.get('/api/products?all=true')
-        products.value = response.data
+        const querySnapshot = await getDocs(collection(db, "products"))
+        const prods = []
+        querySnapshot.forEach((doc) => {
+            prods.push({ id: doc.id, ...doc.data() })
+        })
+        products.value = prods
     } catch (error) {
         console.error('Failed to fetch products for deals:', error)
     } finally {
@@ -63,7 +68,7 @@ const fetchDeals = async () => {
 }
 
 const deals = computed(() => {
-    return products.value.filter(p => p.sale_price !== null)
+    return products.value.filter(p => p.sale_price !== null && p.sale_price !== '')
 })
 
 onMounted(() => {

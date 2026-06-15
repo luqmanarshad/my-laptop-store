@@ -75,7 +75,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { auth, db } from '../firebase_config'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
 import { store } from '../utils/store'
 
 const router = useRouter()
@@ -89,26 +91,34 @@ const processing = ref(false)
 const errorMessage = ref('')
 
 const submitRegister = async () => {
+  if (form.value.password !== form.value.password_confirmation) {
+     errorMessage.value = 'Passwords do not match!'
+     return
+  }
+  
   processing.value = true
   errorMessage.value = ''
 
   try {
-    const response = await axios.post('/api/register', {
-      name: form.value.name,
-      email: form.value.email,
-      password: form.value.password,
-      password_confirmation: form.value.password_confirmation,
+    const userCredential = await createUserWithEmailAndPassword(auth, form.value.email, form.value.password)
+    const user = userCredential.user
+    
+    await updateProfile(user, { displayName: form.value.name })
+    
+    await setDoc(doc(db, 'users', user.uid), {
+        name: form.value.name,
+        email: form.value.email,
+        createdAt: new Date()
     })
 
-    localStorage.setItem('api_token', response.data.token)
-    axios.defaults.headers.common.Authorization = `Bearer ${response.data.token}`
-
+    localStorage.setItem('api_token', 'firebase-token')
+    
     await store.fetchUser()
-    store.addToast(`Account created successfully! Welcome, ${store.user?.name}!`, 'success')
+    store.addToast(`Account created successfully! Welcome, ${form.value.name}!`, 'success')
 
     router.push('/')
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Registration failed. Please check your information.'
+    errorMessage.value = error.message || 'Registration failed.'
   } finally {
     processing.value = false
   }

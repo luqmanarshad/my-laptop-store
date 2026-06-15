@@ -1,5 +1,7 @@
 import { reactive } from 'vue'
 import axios from 'axios'
+import { auth, db } from '../firebase_config'
+import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore'
 
 // Load helper
 const getLocal = (key) => {
@@ -46,15 +48,26 @@ export const store = reactive({
             return
         }
         try {
-            const response = await axios.get('/api/user')
-            this.user = response.data
+            // We use a promise wrapper to wait for auth state
+            const authUser = await new Promise((resolve) => {
+               const unsubscribe = auth.onAuthStateChanged(user => {
+                  unsubscribe();
+                  resolve(user);
+               });
+            });
             
-            // If guest cart has items, merge them first
-            const guestCart = getLocal('guest_cart')
-            if (guestCart && guestCart.length > 0) {
-                await this.mergeGuestCart()
+            if (authUser) {
+                this.user = { id: authUser.uid, name: authUser.displayName || 'User', email: authUser.email }
+                
+                // If guest cart has items, merge them first
+                const guestCart = getLocal('guest_cart')
+                if (guestCart && guestCart.length > 0) {
+                    await this.mergeGuestCart()
+                } else {
+                    await this.fetchCart()
+                }
             } else {
-                await this.fetchCart()
+                this.clearSession();
             }
         } catch (error) {
             console.error('Failed to load user profile:', error)
@@ -63,14 +76,13 @@ export const store = reactive({
     },
     clearSession() {
         localStorage.removeItem('api_token')
-        delete axios.defaults.headers.common['Authorization']
         this.user = null
         this.cart = []
         localStorage.removeItem('guest_cart')
     },
     async logout() {
         try {
-            await axios.post('/api/logout')
+            await auth.signOut()
         } catch (error) {
             console.error('Logout error:', error)
         } finally {
@@ -122,181 +134,167 @@ export const store = reactive({
 
     // Cart Backend & Local Actions
     async fetchCart() {
-        if (!localStorage.getItem('api_token')) {
+        if (!auth.currentUser) {
             this.cart = getLocal('guest_cart')
             return
         }
         this.loadingCart = true
         try {
-            const response = await axios.get('/api/cart')
-            this.cart = response.data
+            const docRef = doc(db, 'carts', auth.currentUser.uid)
+            const docSnap = await getDoc(docRef)
+            if (docSnap.exists()) {
+                this.cart = docSnap.data().items || []
+            } else {
+                this.cart = []
+            }
         } catch (error) {
             console.error('Failed to load cart:', error)
-            if (error.response?.status === 401) {
-                this.clearSession()
-            }
         } finally {
             this.loadingCart = false
         }
     },
+    async saveCartToFirebase() {
+        if (!auth.currentUser) return
+        try {
+            await setDoc(doc(db, 'carts', auth.currentUser.uid), { items: this.cart })
+        } catch (error) {
+            console.error('Failed to save cart:', error)
+        }
+    },
     async addToCart(productId, quantity = 1) {
-        // If guest (not logged in)
-        if (!localStorage.getItem('api_token')) {
-            try {
-                const response = await axios.get(`/api/products/${productId}`)
-                const product = response.data
-                
-                let guestCart = getLocal('guest_cart')
-                const existingIndex = guestCart.findIndex(i => i.product_id === productId)
-                
-                if (existingIndex > -1) {
-                    const newQty = guestCart[existingIndex].quantity + quantity
-                    if (product.stock < newQty) {
-                        this.addToast(`Only ${product.stock} items available in stock.`, 'warning')
-                        guestCart[existingIndex].quantity = product.stock
-                    } else {
-                        guestCart[existingIndex].quantity = newQty
-                    }
-                } else {
-                    const finalQty = product.stock < quantity ? product.stock : quantity
-                    if (finalQty > 0) {
-                        guestCart.push({
-                            id: 'guest_' + Date.now() + '_' + Math.random(),
-                            product_id: productId,
-                            quantity: finalQty,
-                            price: product.sale_price || product.price,
-                            product: product
-                        })
-                    } else {
-                        this.addToast('Item is out of stock.', 'warning')
-                        return
-                    }
-                }
-                
-                saveLocal('guest_cart', guestCart)
-                this.cart = guestCart
-                this.addToast(`Added "${product.title}" to cart`, 'success')
-            } catch (err) {
-                console.error('Guest add to cart failed:', err)
-                this.addToast('Could not add item to cart.', 'danger')
-            }
-            return
+        let product = null
+        try {
+            const pDoc = await getDoc(doc(db, "products", productId))
+            if(pDoc.exists()) product = {id: pDoc.id, ...pDoc.data()}
+        } catch(e) {}
+        
+        if (!product) {
+             this.addToast('Product not found', 'danger')
+             return
         }
 
-        // If logged in
-        try {
-            const response = await axios.post('/api/cart/add', { product_id: productId, quantity })
-            await this.fetchCart()
-            this.addToast(response.data.message || 'Added to cart!', 'success')
-        } catch (error) {
-            console.error('Failed to add to cart:', error)
-            if (error.response?.status === 401) {
-                this.clearSession()
-                this.addToast('Your session expired. Please login again.', 'warning')
-                if (this.router) this.router.push('/login')
+        const isGuest = !auth.currentUser
+        let targetCart = isGuest ? getLocal('guest_cart') : this.cart
+        
+        const existingIndex = targetCart.findIndex(i => i.product_id === productId)
+        if (existingIndex > -1) {
+            const newQty = targetCart[existingIndex].quantity + quantity
+            if (product.stock < newQty) {
+                this.addToast(`Only ${product.stock} items available.`, 'warning')
+                targetCart[existingIndex].quantity = product.stock
             } else {
-                this.addToast(error.response?.data?.message || 'Could not add item to cart. Please try again.', 'danger')
+                targetCart[existingIndex].quantity = newQty
             }
+        } else {
+            const finalQty = product.stock < quantity ? product.stock : quantity
+            if (finalQty > 0) {
+                targetCart.push({
+                    id: 'item_' + Date.now() + '_' + Math.random(),
+                    product_id: productId,
+                    quantity: finalQty,
+                    price: product.sale_price || product.price,
+                    product: product
+                })
+            } else {
+                this.addToast('Item is out of stock.', 'warning')
+                return
+            }
+        }
+
+        if (isGuest) {
+            saveLocal('guest_cart', targetCart)
+            this.cart = targetCart
+            this.addToast(`Added "${product.title}" to cart`, 'success')
+        } else {
+            this.cart = targetCart
+            await this.saveCartToFirebase()
+            this.addToast('Added to cart!', 'success')
         }
     },
     async updateCartQuantity(cartItemId, quantity) {
         if (quantity < 1) return
-
-        // If guest
-        if (!localStorage.getItem('api_token')) {
-            let guestCart = getLocal('guest_cart')
-            const item = guestCart.find(i => i.id === cartItemId)
-            if (item) {
-                if (item.product.stock < quantity) {
-                    this.addToast(`Only ${item.product.stock} items available in stock.`, 'warning')
-                    item.quantity = item.product.stock
-                } else {
-                    item.quantity = quantity
-                }
-                saveLocal('guest_cart', guestCart)
-                this.cart = guestCart
-                this.addToast('Cart updated', 'success')
-            }
-            return
-        }
-
-        // If logged in
-        try {
-            await axios.put(`/api/cart/${cartItemId}`, { quantity })
-            const item = this.cart.find(i => i.id === cartItemId)
-            if (item) item.quantity = quantity
-            this.addToast('Cart updated', 'success')
-        } catch (error) {
-            console.error('Failed to update cart quantity:', error)
-            if (error.response?.status === 401) {
-                this.clearSession()
-                this.addToast('Your session expired. Please login again.', 'warning')
-                if (this.router) this.router.push('/login')
-            } else {
-                this.addToast(error.response?.data?.message || 'Failed to update quantity', 'danger')
-            }
+        
+        const isGuest = !auth.currentUser
+        let targetCart = isGuest ? getLocal('guest_cart') : this.cart
+        const item = targetCart.find(i => i.id === cartItemId)
+        
+        if (item) {
+             if (item.product.stock < quantity) {
+                 this.addToast(`Only ${item.product.stock} items available.`, 'warning')
+                 item.quantity = item.product.stock
+             } else {
+                 item.quantity = quantity
+             }
+             
+             if (isGuest) {
+                 saveLocal('guest_cart', targetCart)
+                 this.cart = targetCart
+             } else {
+                 this.cart = targetCart
+                 await this.saveCartToFirebase()
+             }
+             this.addToast('Cart updated', 'success')
         }
     },
     async removeFromCart(cartItemId) {
-        // If guest
-        if (!localStorage.getItem('api_token')) {
-            let guestCart = getLocal('guest_cart')
-            const item = guestCart.find(i => i.id === cartItemId)
-            const title = item?.product?.title || 'item'
-            guestCart = guestCart.filter(i => i.id !== cartItemId)
-            saveLocal('guest_cart', guestCart)
-            this.cart = guestCart
-            this.addToast(`Removed "${title}" from cart`, 'info')
-            return
+        const isGuest = !auth.currentUser
+        let targetCart = isGuest ? getLocal('guest_cart') : this.cart
+        
+        const item = targetCart.find(i => i.id === cartItemId)
+        const title = item?.product?.title || 'item'
+        targetCart = targetCart.filter(i => i.id !== cartItemId)
+        
+        if (isGuest) {
+            saveLocal('guest_cart', targetCart)
+            this.cart = targetCart
+        } else {
+            this.cart = targetCart
+            await this.saveCartToFirebase()
         }
-
-        // If logged in
-        try {
-            const item = this.cart.find(i => i.id === cartItemId)
-            const title = item?.product?.title || 'item'
-            await axios.delete(`/api/cart/${cartItemId}`)
-            this.cart = this.cart.filter(i => i.id !== cartItemId)
-            this.addToast(`Removed "${title}" from cart`, 'info')
-        } catch (error) {
-            console.error('Failed to remove from cart:', error)
-            if (error.response?.status === 401) {
-                this.clearSession()
-                this.addToast('Your session expired. Please login again.', 'warning')
-                if (this.router) this.router.push('/login')
-            } else {
-                this.addToast('Could not remove item from cart', 'danger')
-            }
-        }
+        this.addToast(`Removed "${title}" from cart`, 'info')
     },
     async mergeGuestCart() {
         const guestCart = getLocal('guest_cart')
-        if (!guestCart || guestCart.length === 0) return
+        if (!guestCart || guestCart.length === 0 || !auth.currentUser) return
 
         try {
-            const items = guestCart.map(item => ({
-                product_id: item.product_id,
-                quantity: item.quantity
-            }))
-
-            await axios.post('/api/cart/merge', { items })
+            await this.fetchCart()
+            for (const item of guestCart) {
+                 const existing = this.cart.find(i => i.product_id === item.product_id)
+                 if (existing) {
+                      existing.quantity += item.quantity
+                 } else {
+                      this.cart.push(item)
+                 }
+            }
+            await this.saveCartToFirebase()
             localStorage.removeItem('guest_cart')
             this.addToast('Synchronized guest shopping cart to your account!', 'success')
-            await this.fetchCart()
         } catch (error) {
             console.error('Failed to merge guest cart:', error)
-            await this.fetchCart()
         }
     },
     async processCheckout(checkoutData) {
         try {
-            const response = await axios.post('/api/checkout', checkoutData)
+            if (!auth.currentUser) throw new Error("Must be logged in to checkout")
+            
+            const orderData = {
+                 user_id: auth.currentUser.uid,
+                 ...checkoutData,
+                 items: this.cart,
+                 status: 'pending',
+                 created_at: new Date()
+            }
+            await addDoc(collection(db, "orders"), orderData)
+            
             this.cart = []
+            await this.saveCartToFirebase()
+            
             this.addToast('Order placed successfully!', 'success')
-            return response.data
+            return { message: 'Order placed' }
         } catch (error) {
             console.error('Checkout failed:', error)
-            const msg = error.response?.data?.message || 'Failed to place order. Please try again.'
-            this.addToast(msg, 'danger')
+            this.addToast('Failed to place order. Please try again.', 'danger')
             throw error;
         }
     }

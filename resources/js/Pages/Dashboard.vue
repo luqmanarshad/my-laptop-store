@@ -234,12 +234,24 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { db, auth } from '../firebase_config'
+import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 
 const router = useRouter()
 const products = ref([])
-const availableBrands = ref([])
-const availableCategories = ref([])
+const availableBrands = ref([
+    { id: 'apple', name: 'Apple' },
+    { id: 'hp', name: 'HP' },
+    { id: 'dell', name: 'Dell' },
+    { id: 'lenovo', name: 'Lenovo' },
+    { id: 'asus', name: 'ASUS' },
+])
+const availableCategories = ref([
+    { id: 'gaming', name: 'Gaming' },
+    { id: 'business', name: 'Business' },
+    { id: 'student', name: 'Student' },
+    { id: 'creator', name: 'Creator' },
+])
 const loading = ref(true)
 const searchQuery = ref('')
 const alertMessage = ref('')
@@ -275,35 +287,22 @@ const filteredProducts = computed(() => {
     const term = searchQuery.value.toLowerCase()
     return products.value.filter((product) => {
         return (
-            product.title.toLowerCase().includes(term) ||
-            product.brand?.name.toLowerCase().includes(term) ||
-            product.category?.name.toLowerCase().includes(term)
+            product.title?.toLowerCase().includes(term) ||
+            product.brand?.name?.toLowerCase().includes(term) ||
+            product.category?.name?.toLowerCase().includes(term)
         )
     })
 })
 
-const loadBrandsAndCategories = async () => {
-    try {
-        const [brandsRes, catsRes] = await Promise.all([
-            axios.get('/api/brands'),
-            axios.get('/api/categories')
-        ])
-        availableBrands.value = brandsRes.data
-        availableCategories.value = catsRes.data
-    } catch (error) {
-        console.error('Failed to load brands and categories:', error)
-    }
-}
-
 const loadProducts = async () => {
     loading.value = true
     try {
-        const response = await axios.get('/api/products', {
-            params: {
-                all: true,
-            },
+        const querySnapshot = await getDocs(collection(db, "products"))
+        const prods = []
+        querySnapshot.forEach((doc) => {
+            prods.push({ id: doc.id, ...doc.data() })
         })
-        products.value = response.data
+        products.value = prods
     } catch (error) {
         console.error('Unable to load products:', error)
     } finally {
@@ -351,23 +350,43 @@ const removeCustomSpecRow = (index) => {
 
 const saveProduct = async () => {
     try {
-        if (!form.value.title || form.value.category_id === null || form.value.brand_id === null) {
+        if (!form.value.title || !form.value.category_id || !form.value.brand_id) {
             alertMessage.value = 'Title, brand, and category are required.'
             return
         }
 
-        // Filter out empty custom specification rows
         const cleanedCustomSpecs = (form.value.custom_specs || []).filter(item => item.label.trim() && item.value.trim())
+        
         const payload = {
-            ...form.value,
-            custom_specs: cleanedCustomSpecs
+            title: form.value.title,
+            description: form.value.description,
+            price: form.value.price,
+            sale_price: form.value.sale_price,
+            stock: form.value.stock,
+            sku: form.value.sku,
+            thumbnail: form.value.thumbnail,
+            featured: form.value.featured,
+            status: form.value.status,
+            category: availableCategories.value.find(c => c.id === form.value.category_id) || null,
+            brand: availableBrands.value.find(b => b.id === form.value.brand_id) || null,
+            specification: {
+                processor: form.value.processor,
+                ram: form.value.ram,
+                storage: form.value.storage,
+                graphics: form.value.graphics,
+                display: form.value.display,
+                battery: form.value.battery,
+                os: form.value.os,
+                weight: form.value.weight,
+                custom_specs: cleanedCustomSpecs
+            }
         }
 
         if (form.value.id) {
-            await axios.put(`/api/products/${form.value.id}`, payload)
+            await updateDoc(doc(db, "products", form.value.id), payload)
             alertMessage.value = 'Product updated successfully.'
         } else {
-            await axios.post('/api/products', payload)
+            await addDoc(collection(db, "products"), payload)
             alertMessage.value = 'Product created successfully.'
         }
 
@@ -384,7 +403,7 @@ const editProduct = (product) => {
     if (product.specification?.custom_specs) {
         customSpecsParsed = Array.isArray(product.specification.custom_specs)
             ? product.specification.custom_specs
-            : JSON.parse(product.specification.custom_specs)
+            : (typeof product.specification.custom_specs === 'string' ? JSON.parse(product.specification.custom_specs) : [])
     }
 
     form.value = {
@@ -408,7 +427,7 @@ const editProduct = (product) => {
         battery: product.specification?.battery || '',
         os: product.specification?.os || '',
         weight: product.specification?.weight || '',
-        custom_specs: JSON.parse(JSON.stringify(customSpecsParsed)) // Deep copy
+        custom_specs: JSON.parse(JSON.stringify(customSpecsParsed))
     }
     alertMessage.value = ''
 }
@@ -418,7 +437,7 @@ const deleteProduct = async (id) => {
         return
     }
     try {
-        await axios.delete(`/api/products/${id}`)
+        await deleteDoc(doc(db, "products", id))
         products.value = products.value.filter((product) => product.id !== id)
         alertMessage.value = 'Product deleted successfully.'
     } catch (error) {
@@ -429,17 +448,15 @@ const deleteProduct = async (id) => {
 
 const logout = async () => {
     try {
-        await axios.post('/api/logout')
+        await auth.signOut()
     } catch (error) {
         console.warn('Logout failed:', error)
     }
     localStorage.removeItem('api_token')
-    delete axios.defaults.headers.common.Authorization
     router.push('/login')
 }
 
 onMounted(() => {
     loadProducts()
-    loadBrandsAndCategories()
 })
 </script>

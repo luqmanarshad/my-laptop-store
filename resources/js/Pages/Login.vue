@@ -53,7 +53,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { auth } from '../firebase_config'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 import { store } from '../utils/store'
 
 const router = useRouter()
@@ -69,24 +70,20 @@ const submitLogin = async () => {
   errorMessage.value = ''
 
   try {
-    const response = await axios.post('/api/login', {
-      email: form.value.email,
-      password: form.value.password,
-    })
-
-    localStorage.setItem('api_token', response.data.token)
-    axios.defaults.headers.common.Authorization = `Bearer ${response.data.token}`
-
+    const userCredential = await signInWithEmailAndPassword(auth, form.value.email, form.value.password)
+    
+    localStorage.setItem('api_token', 'firebase-token') // keep for app.js route guards
+    
     await store.fetchUser()
     store.addToast(`Welcome back, ${store.user?.name || 'User'}!`, 'success')
 
-    if (store.user?.email === 'admin@example.com') {
+    if (form.value.email === 'admin@example.com') {
       router.push('/dashboard')
     } else {
       router.push('/')
     }
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Login failed. Please check your credentials.'
+    errorMessage.value = error.message || 'Login failed. Please check your credentials.'
   } finally {
     processing.value = false
   }

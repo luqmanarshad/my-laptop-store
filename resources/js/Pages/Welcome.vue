@@ -156,7 +156,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { db } from '../firebase_config'
+import { collection, getDocs, query, limit } from 'firebase/firestore'
 
 import MainLayout from '../Layouts/MainLayout.vue'
 import HeroSlider from '../Components/HeroSlider.vue'
@@ -173,14 +174,18 @@ const getProducts = async (params = {}) => {
     loading.value = true
 
     try {
-        const response = await axios.get('/api/products', {
-            params: {
-                per_page: 8,
-                ...params,
-            },
+        const q = query(collection(db, "products"), limit(8))
+        const querySnapshot = await getDocs(q)
+        const prods = []
+        querySnapshot.forEach((doc) => {
+            prods.push({ id: doc.id, ...doc.data() })
         })
 
-        products.value = response.data.data
+        if (params.search) {
+             products.value = prods.filter(p => p.title?.toLowerCase().includes(params.search.toLowerCase()))
+        } else {
+             products.value = prods
+        }
 
         if (!products.value.length) {
             message.value = searchQuery.value

@@ -115,7 +115,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { db, auth } from '../firebase_config'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import MainLayout from '../Layouts/MainLayout.vue'
 import { store } from '../utils/store'
 
@@ -125,8 +126,25 @@ const loading = ref(true)
 const fetchOrders = async () => {
     loading.value = true
     try {
-        const response = await axios.get('/api/orders')
-        orders.value = response.data
+        if (!auth.currentUser) {
+            orders.value = []
+            return
+        }
+        
+        const q = query(
+            collection(db, "orders"), 
+            where("user_id", "==", auth.currentUser.uid)
+        )
+        const querySnapshot = await getDocs(q)
+        const fetchedOrders = []
+        querySnapshot.forEach((doc) => {
+            const data = doc.data()
+            const created_at = data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at
+            fetchedOrders.push({ id: doc.id, ...data, created_at })
+        })
+        
+        fetchedOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        orders.value = fetchedOrders
     } catch (error) {
         console.error('Failed to load orders:', error)
         store.addToast('Could not load order history.', 'danger')

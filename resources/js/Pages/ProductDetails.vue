@@ -123,7 +123,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import { db } from '../firebase_config'
+import { doc, getDoc } from 'firebase/firestore'
 import MainLayout from '../Layouts/MainLayout.vue'
 import { store } from '../utils/store'
 
@@ -132,8 +133,13 @@ const product = ref({})
 
 const getProduct = async () => {
     try {
-        const response = await axios.get(`/api/products/${route.params.id}`)
-        product.value = response.data
+        const docRef = doc(db, "products", route.params.id)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+            product.value = { id: docSnap.id, ...docSnap.data() }
+        } else {
+            console.error('Product not found')
+        }
     } catch (error) {
         console.error('Failed to load product:', error)
     }
@@ -144,7 +150,7 @@ const customSpecsList = computed(() => {
     try {
         return Array.isArray(product.value.specification.custom_specs)
             ? product.value.specification.custom_specs
-            : JSON.parse(product.value.specification.custom_specs)
+            : (typeof product.value.specification.custom_specs === 'string' ? JSON.parse(product.value.specification.custom_specs) : [])
     } catch (e) {
         console.warn("Failed to parse custom specs:", e)
         return []
