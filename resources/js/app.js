@@ -11,7 +11,6 @@ import Laptops from './pages/Laptops.vue'
 import Brands from './pages/Brands.vue'
 import Accessories from './pages/Accessories.vue'
 import Deals from './pages/Deals.vue'
-
 import Support from './pages/Support.vue'
 import Categories from './pages/Categories.vue'
 import Compare from './pages/Compare.vue'
@@ -22,6 +21,7 @@ import Register from './pages/Register.vue'
 import ProductDetails from './pages/ProductDetails.vue'
 import Cart from './pages/Cart.vue'
 import Orders from './pages/Orders.vue'
+
 import { store } from './utils/store'
 
 
