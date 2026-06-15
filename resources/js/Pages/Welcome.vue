@@ -71,28 +71,34 @@
                     >
 
                         <div>
-                            <h2 class="fw-bold">
+                            <h2 class="fw-bold mb-1">
                                 Popular Laptops
                             </h2>
-                            <p class="text-muted mb-0">{{ message }}</p>
+                            <p class="text-muted mb-0" style="font-size: 0.9rem;">{{ message }}</p>
                         </div>
 
-                        <div class="d-flex gap-2 flex-wrap align-items-center">
-                            <input
-                                type="search"
-                                class="form-control search-input"
-                                placeholder="Search popular laptops..."
-                                v-model="searchQuery"
-                                @keyup.enter="searchProducts"
-                            />
-
-                            <button class="btn btn-primary" type="button" @click="searchProducts">
-                                Search
-                            </button>
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="input-group" style="max-width: 280px;">
+                                <input
+                                    type="search"
+                                    class="form-control search-input"
+                                    placeholder="Search laptops..."
+                                    v-model="searchQuery"
+                                    @keyup.enter="searchProducts"
+                                    style="border-right: none;"
+                                />
+                                <button
+                                    class="btn btn-primary"
+                                    type="button"
+                                    @click="searchProducts"
+                                >
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                            </div>
 
                             <router-link
                                 to="/laptops"
-                                class="btn btn-outline-primary rounded-pill px-4"
+                                class="btn btn-outline-primary rounded-pill px-4 text-nowrap"
                             >
                                 View All
                             </router-link>

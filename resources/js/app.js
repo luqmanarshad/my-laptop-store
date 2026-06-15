@@ -20,8 +20,9 @@ import Login from './pages/Login.vue'
 import Register from './pages/Register.vue'
 import ProductDetails from './pages/ProductDetails.vue'
 import Cart from './pages/Cart.vue'
-import Orders from './Pages/Orders.vue'
+import Orders from './pages/Orders.vue'
 import { store } from './utils/store'
+
 
 const router = createRouter({
     history: createWebHistory(),
