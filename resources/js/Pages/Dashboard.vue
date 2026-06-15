@@ -350,8 +350,8 @@ const removeCustomSpecRow = (index) => {
 
 const saveProduct = async () => {
     try {
-        if (!form.value.title || !form.value.category_id || !form.value.brand_id) {
-            alertMessage.value = 'Title, brand, and category are required.'
+        if (!form.value.title) {
+            alertMessage.value = 'Product title is required.'
             return
         }
 

@@ -86,9 +86,9 @@
                                         <i class="bi bi-bag-check me-2"></i> My Orders
                                     </router-link>
                                 </li>
-                                <li v-if="store.user.email === 'admin@example.com'">
+                                <li>
                                     <router-link to="/dashboard" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-primary">
-                                        <i class="bi bi-speedometer2 me-2"></i> Admin Panel
+                                        <i class="bi bi-plus-circle me-2"></i> Add Product
                                     </router-link>
                                 </li>
                                 <li><hr class="dropdown-divider border-light"></li>
