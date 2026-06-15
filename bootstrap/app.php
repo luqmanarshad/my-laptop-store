@@ -32,3 +32,9 @@ return Application::configure(
         //
     })
     ->create();
+
+if (isset($_ENV['APP_STORAGE'])) {
+    $app->useStoragePath($_ENV['APP_STORAGE']);
+}
+
+return $app;
