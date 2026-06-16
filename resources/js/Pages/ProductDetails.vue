@@ -91,6 +91,30 @@
                         {{ product.description }}
                     </p>
 
+                    <div v-if="product.phone || product.address" class="mb-4 fade-in-up" style="animation-delay: 0.35s;">
+                        <h6 class="fw-bold mb-3">Store Contact</h6>
+                        <div class="row g-3">
+                            <div v-if="product.phone" class="col-sm-6">
+                                <div class="bg-white border rounded-4 p-3 h-100 d-flex align-items-start gap-2">
+                                    <div class="text-primary fs-4 mt-1"><i class="bi bi-telephone-fill"></i></div>
+                                    <div>
+                                        <div class="small text-muted mb-1">Phone</div>
+                                        <div class="fw-semibold">{{ product.phone }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="product.address" class="col-sm-6">
+                                <div class="bg-white border rounded-4 p-3 h-100 d-flex align-items-start gap-2">
+                                    <div class="text-primary fs-4 mt-1"><i class="bi bi-geo-alt-fill"></i></div>
+                                    <div>
+                                        <div class="small text-muted mb-1">Address</div>
+                                        <div class="fw-semibold">{{ product.address }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Key Features (Extracted from specs) -->
                     <div v-if="product.specification" class="mb-4 fade-in-up" style="animation-delay: 0.4s;">
                         <h6 class="fw-bold mb-3">Key Features:</h6>

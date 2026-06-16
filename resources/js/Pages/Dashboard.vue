@@ -608,7 +608,7 @@ const refreshAllData = async () => {
     loading.value = false
 }
 
-const resetForm = () => {
+const resetForm = (keepAlert = false) => {
     form.value = {
         id: null,
         category_id: null,
@@ -634,7 +634,9 @@ const resetForm = () => {
         address: '',
         custom_specs: []
     }
-    alertMessage.value = ''
+    if (!keepAlert) {
+        alertMessage.value = ''
+    }
 }
 
 const addCustomSpecRow = () => {
@@ -684,15 +686,16 @@ const saveProduct = async () => {
             }
         }
 
+        const successText = form.value.id ? 'Product updated successfully.' : 'Product created successfully.'
+
         if (form.value.id) {
             await updateDoc(doc(db, "products", form.value.id), payload)
-            alertMessage.value = 'Product updated successfully.'
         } else {
             await addDoc(collection(db, "products"), payload)
-            alertMessage.value = 'Product created successfully.'
         }
 
-        resetForm()
+        alertMessage.value = successText
+        resetForm(true)
         await loadProducts()
     } catch (error) {
         console.error('Unable to save product:', error)
