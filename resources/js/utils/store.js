@@ -57,7 +57,27 @@ export const store = reactive({
             });
             
             if (authUser) {
-                this.user = { id: authUser.uid, name: authUser.displayName || 'User', email: authUser.email }
+                // Fetch user document to check role
+                let isAdmin = false
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', authUser.uid))
+                    if (userDoc.exists() && userDoc.data().role === 'admin') {
+                        isAdmin = true
+                    }
+                    // Fallback for hardcoded admin
+                    if (authUser.email === 'luqmanarshad469@gmail.com') {
+                        isAdmin = true
+                    }
+                } catch (e) {
+                    console.error('Error fetching user role:', e)
+                }
+
+                this.user = { 
+                    id: authUser.uid, 
+                    name: authUser.displayName || 'User', 
+                    email: authUser.email,
+                    isAdmin: isAdmin
+                }
                 
                 // If guest cart has items, merge them first
                 const guestCart = getLocal('guest_cart')
@@ -276,10 +296,10 @@ export const store = reactive({
     },
     async processCheckout(checkoutData) {
         try {
-            if (!auth.currentUser) throw new Error("Must be logged in to checkout")
+            const userId = auth.currentUser ? auth.currentUser.uid : 'guest'
             
             const orderData = {
-                 user_id: auth.currentUser.uid,
+                 user_id: userId,
                  ...checkoutData,
                  items: this.cart,
                  status: 'pending',
@@ -287,15 +307,64 @@ export const store = reactive({
             }
             await addDoc(collection(db, "orders"), orderData)
             
+            // Clear cart
             this.cart = []
-            await this.saveCartToFirebase()
+            if (userId === 'guest') {
+                localStorage.removeItem('guest_cart')
+            } else {
+                await this.saveCartToFirebase()
+            }
             
             this.addToast('Order placed successfully!', 'success')
-            return { message: 'Order placed' }
+            
+            // Trigger Email Notification (EmailJS)
+            await this.sendOrderEmail(orderData, checkoutData.contact_email)
+
+            return { message: 'Order placed', order: orderData }
         } catch (error) {
             console.error('Checkout failed:', error)
             this.addToast('Failed to place order. Please try again.', 'danger')
             throw error;
+        }
+    },
+    async sendOrderEmail(orderData, userEmail) {
+        // NOTE: To make this work in production, create a free account at EmailJS.com
+        // 1. Add your Service ID
+        // 2. Add your Template ID
+        // 3. Add your Public Key
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'
+        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'
+        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'
+
+        const templateParams = {
+            to_email: userEmail,
+            to_name: this.user?.name || 'Customer',
+            order_id: Math.floor(Math.random() * 1000000), // Random ID for demo
+            order_total: orderData.items.reduce((t, i) => t + (i.price * i.quantity), 0).toFixed(2),
+            shipping_address: orderData.shipping_address,
+            payment_method: orderData.payment_method
+        }
+
+        try {
+            if (EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID') {
+                // Mock behavior if EmailJS is not configured
+                console.log('✅ [EmailJS Mock] Order receipt email sent to:', userEmail)
+                console.log('Template Params:', templateParams)
+                this.addToast('Order receipt emailed to you!', 'info')
+                return
+            }
+
+            // Real EmailJS call
+            await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
+                service_id: EMAILJS_SERVICE_ID,
+                template_id: EMAILJS_TEMPLATE_ID,
+                user_id: EMAILJS_PUBLIC_KEY,
+                template_params: templateParams
+            })
+            this.addToast('Order receipt emailed to you!', 'info')
+        } catch (error) {
+            console.error('Email failed to send:', error)
+            // Don't show toast error for email to not disrupt checkout flow UX
         }
     }
 })

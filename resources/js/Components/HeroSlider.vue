@@ -7,47 +7,50 @@
             <div class="hero-glow hero-glow-right"></div>
 
             <!-- Left Arrow -->
-            <button class="arrow-btn left-arrow" @click="prevSlide" aria-label="Previous slide">
+            <button class="arrow-btn left-arrow d-none d-md-grid" @click="prevSlide" aria-label="Previous slide">
                 <i class="bi bi-chevron-left"></i>
             </button>
 
-            <div class="row align-items-center h-100 gx-5">
+            <div class="row align-items-center h-100 gx-4 gx-lg-5 flex-column-reverse flex-md-row">
 
                 <!-- Text -->
-                <div class="col-lg-5 ps-lg-5 text-content">
+                <div class="col-md-6 col-lg-5 ps-md-4 ps-lg-5 text-content text-center text-md-start mt-4 mt-md-0 z-1">
 
-                    <span class="arrival-badge">
+                    <span class="arrival-badge mx-auto mx-md-0 fade-in-up" :key="'badge'+currentSlide">
                         {{ slides[currentSlide].badge }}
                     </span>
 
-                    <h1 class="hero-title">
+                    <h1 class="hero-title fade-in-up" style="animation-delay: 0.1s;" :key="'title'+currentSlide">
                         {{ slides[currentSlide].title }}
                     </h1>
 
-                    <p class="hero-desc">
+                    <p class="hero-desc mx-auto mx-md-0 fade-in-up" style="animation-delay: 0.2s;" :key="'desc'+currentSlide">
                         {{ slides[currentSlide].description }}
                     </p>
 
-                    <div class="hero-features mb-4">
+                    <div class="hero-features mb-4 justify-content-center justify-content-md-start fade-in-up" style="animation-delay: 0.3s;" :key="'feat'+currentSlide">
                         <span class="feature-pill">{{ slides[currentSlide].feature1 }}</span>
                         <span class="feature-pill">{{ slides[currentSlide].feature2 }}</span>
                         <span class="feature-pill">{{ slides[currentSlide].feature3 }}</span>
                     </div>
 
-                    <button class="shop-btn" type="button" @click="goToLaptops">
+                    <button class="shop-btn fade-in-up w-100 w-sm-auto mx-auto mx-md-0" style="animation-delay: 0.4s;" type="button" @click="goToLaptops" :key="'btn'+currentSlide">
                         {{ slides[currentSlide].buttonText }}
                     </button>
 
                 </div>
 
                 <!-- Laptop -->
-                <div class="col-lg-7 position-relative text-center">
+                <div class="col-md-6 col-lg-7 position-relative text-center z-1">
                     <div class="image-panel">
-                        <img
-                            :src="slides[currentSlide].image"
-                            class="hero-laptop"
-                            :alt="slides[currentSlide].title"
-                        />
+                        <transition name="fade" mode="out-in">
+                            <img
+                                :key="currentSlide"
+                                :src="slides[currentSlide].image"
+                                class="hero-laptop"
+                                :alt="slides[currentSlide].title"
+                            />
+                        </transition>
                     </div>
                 </div>
 
@@ -65,7 +68,7 @@
             </div>
 
             <!-- Right Arrow -->
-            <button class="arrow-btn right-arrow" @click="nextSlide" aria-label="Next slide">
+            <button class="arrow-btn right-arrow d-none d-md-grid" @click="nextSlide" aria-label="Next slide">
                 <i class="bi bi-chevron-right"></i>
             </button>
 
@@ -130,13 +133,37 @@ const goToLaptops = () => {
 }
 
 let intervalId = null
+let touchStartX = 0
+
+const handleTouchStart = (e) => {
+    touchStartX = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].clientX
+    if (touchStartX - touchEndX > 50) {
+        nextSlide() // swipe left
+    } else if (touchEndX - touchStartX > 50) {
+        prevSlide() // swipe right
+    }
+}
 
 onMounted(() => {
     intervalId = window.setInterval(nextSlide, 6000)
+    const heroBox = document.querySelector('.hero-box')
+    if (heroBox) {
+        heroBox.addEventListener('touchstart', handleTouchStart, { passive: true })
+        heroBox.addEventListener('touchend', handleTouchEnd, { passive: true })
+    }
 })
 
 onUnmounted(() => {
     window.clearInterval(intervalId)
+    const heroBox = document.querySelector('.hero-box')
+    if (heroBox) {
+        heroBox.removeEventListener('touchstart', handleTouchStart)
+        heroBox.removeEventListener('touchend', handleTouchEnd)
+    }
 })
 </script>
 
@@ -150,7 +177,7 @@ onUnmounted(() => {
     position: relative;
     padding: 2rem;
     overflow: hidden;
-    box-shadow: 0 28px 70px rgba(14, 38, 70, 0.1);
+    box-shadow: 0 28px 70px rgba(14, 38, 70, 0.08);
 }
 
 .hero-glow {
@@ -158,6 +185,7 @@ onUnmounted(() => {
     border-radius: 50%;
     filter: blur(80px);
     opacity: 0.7;
+    z-index: 0;
 }
 
 .hero-glow-left {
@@ -177,11 +205,12 @@ onUnmounted(() => {
 }
 
 .hero-title {
-    font-size: clamp(3rem, 4.4vw, 4.4rem);
+    font-size: clamp(2.5rem, 4.4vw, 4.4rem);
     font-weight: 800;
     color: #0f172a;
-    line-height: 1.02;
+    line-height: 1.1;
     margin-bottom: 1rem;
+    letter-spacing: -1px;
 }
 
 .hero-desc {
@@ -189,6 +218,7 @@ onUnmounted(() => {
     font-size: 1.05rem;
     max-width: 520px;
     margin-bottom: 1.8rem;
+    line-height: 1.6;
 }
 
 .arrival-badge {
@@ -197,160 +227,185 @@ onUnmounted(() => {
     justify-content: center;
     color: #1d4ed8;
     background: rgba(59, 130, 246, 0.12);
-    padding: 0.75rem 1.2rem;
+    padding: 0.6rem 1rem;
     border-radius: 999px;
     font-weight: 700;
+    font-size: 0.85rem;
     letter-spacing: 0.04em;
-    margin-bottom: 1.4rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .hero-features {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.6rem;
     margin-bottom: 1.8rem;
 }
 
 .feature-pill {
-    background: rgba(15, 23, 42, 0.06);
-    color: #0f172a;
-    padding: 0.75rem 1rem;
+    background: white;
+    color: #334155;
+    padding: 0.6rem 0.9rem;
     border-radius: 999px;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
 }
 
 .shop-btn {
-    background: #2563eb;
+    background: var(--primary);
     color: white;
     border: none;
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 1rem 2rem;
     font-weight: 700;
-    box-shadow: 0 18px 35px rgba(37, 99, 235, 0.22);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-size: 1.1rem;
+    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.25);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .shop-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.35);
+    background: var(--primary-dark);
 }
 
 .image-panel {
     position: relative;
     max-width: 740px;
     margin: 0 auto;
-    padding: 1.8rem;
-    background: rgba(255, 255, 255, 0.82);
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
     border-radius: 34px;
-    box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 24px 65px rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(255,255,255,0.8);
 }
 
 .hero-laptop {
     width: 100%;
-    max-height: 520px;
+    max-height: 480px;
     object-fit: contain;
-    transform: translateY(-10px);
+    transform: translateY(-5px);
+    filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
 }
 
 .arrow-btn {
     position: absolute;
     top: calc(50% - 1rem);
     transform: translateY(-50%);
-    width: 54px;
-    height: 54px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     border: none;
     background: white;
     color: #0f172a;
-    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
     display: grid;
     place-items: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    z-index: 2;
+    transition: all 0.2s ease;
+    z-index: 5;
+    font-size: 1.2rem;
 }
 
 .arrow-btn:hover {
-    transform: translateY(-50%) scale(1.03);
-    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.15);
+    color: var(--primary);
 }
 
-.left-arrow {
-    left: 16px;
-}
-
-.right-arrow {
-    right: 16px;
-}
+.left-arrow { left: 16px; }
+.right-arrow { right: 16px; }
 
 .slider-dots {
     position: absolute;
-    bottom: 18px;
+    bottom: 20px;
     width: 100%;
     text-align: center;
-    z-index: 2;
+    z-index: 5;
 }
 
 .dot {
-    width: 12px;
-    height: 12px;
-    background: rgba(148, 163, 184, 0.44);
+    width: 10px;
+    height: 10px;
+    background: #cbd5e1;
     border-radius: 50%;
     display: inline-block;
     margin: 0 6px;
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.dot:hover {
-    transform: scale(1.14);
+    transition: all 0.3s ease;
 }
 
 .dot.active {
-    background: #1d4ed8;
-    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.12);
+    background: var(--primary);
+    transform: scale(1.3);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
 }
 
+/* Animations */
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.fade-enter-from {
+    opacity: 0;
+    transform: translateX(30px);
+}
+.fade-leave-to {
+    opacity: 0;
+    transform: translateX(-30px);
+}
+
+/* Mobile Adjustments */
 @media (max-width: 991px) {
-    .hero-box {
-        min-height: 680px;
-        padding: 1.6rem;
-    }
-
-    .hero-title {
-        font-size: 3rem;
-    }
-
-    .hero-desc {
-        font-size: 1rem;
-    }
-
-    .image-panel {
-        padding: 1.4rem;
-    }
+    .hero-title { font-size: 2.8rem; }
+    .hero-laptop { max-height: 380px; }
 }
 
 @media (max-width: 767px) {
     .hero-box {
-        padding: 1.2rem;
-    }
-
-    .hero-glow-left,
-    .hero-glow-right {
-        display: none;
-    }
-
-    .arrow-btn {
-        width: 48px;
-        height: 48px;
+        padding: 1.5rem 1rem 3rem 1rem;
+        border-radius: 28px;
+        min-height: auto;
     }
 
     .hero-title {
-        font-size: 2.4rem;
+        font-size: 2.2rem;
+        line-height: 1.2;
     }
 
-    .hero-features {
-        gap: 0.5rem;
+    .hero-desc {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .image-panel {
+        padding: 0.5rem;
+        border-radius: 24px;
+        margin-bottom: 2rem;
+        background: transparent;
+        box-shadow: none;
+        border: none;
+    }
+    
+    .hero-laptop {
+        max-height: 280px;
+        filter: drop-shadow(0 15px 25px rgba(0,0,0,0.1));
+    }
+
+    .feature-pill {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.8rem;
+    }
+    
+    .shop-btn {
+        padding: 0.9rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .slider-dots {
+        bottom: 15px;
     }
 }
 </style>

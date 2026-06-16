@@ -73,7 +73,7 @@ const router = createRouter({
         {
             path: '/dashboard',
             component: Dashboard,
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: true, requiresAdmin: true },
         },
         {
             path: '/login',
@@ -81,7 +81,7 @@ const router = createRouter({
         },
         {
             path: '/register',
-            component: Register,
+            redirect: '/login', // Registration disabled
         },
         {
             path: '/product/:id',
@@ -101,11 +101,23 @@ const router = createRouter({
 
 store.router = router
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     const token = localStorage.getItem('api_token')
 
     if (to.meta.requiresAuth && !token) {
         return next({ path: '/login' })
+    }
+
+    // Wait for user to be populated if token exists but user doesn't
+    if (token && !store.user) {
+        await store.fetchUser()
+    }
+
+    if (to.meta.requiresAdmin) {
+        if (!store.user || !store.user.isAdmin) {
+            store.addToast('Access Denied: Admins Only', 'danger')
+            return next({ path: '/' })
+        }
     }
 
     return next()

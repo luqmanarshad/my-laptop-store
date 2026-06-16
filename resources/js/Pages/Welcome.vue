@@ -8,57 +8,61 @@
         <FeatureBar />
 
         <!-- Products Section -->
-        <section class="container mt-5">
+        <section class="container mt-5 mb-5 pb-5">
 
             <div class="row">
 
                 <!-- Left Sidebar -->
                 <div class="col-lg-3 mb-4">
 
-                    <div
-                        class="card border-0 shadow-sm rounded-4 p-4"
-                    >
+                    <!-- Mobile category toggle -->
+                    <button class="btn btn-outline-primary w-100 d-lg-none mb-3 d-flex justify-content-between align-items-center" @click="showCategories = !showCategories">
+                        <span class="fw-bold"><i class="bi bi-grid-fill me-2"></i> Shop By Category</span>
+                        <i class="bi" :class="showCategories ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                    </button>
 
-                        <h4 class="fw-bold mb-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 sticky-lg-top" style="top: 100px;" :class="{'d-none d-lg-block': !showCategories}">
+                        <h4 class="fw-bold mb-4 d-none d-lg-block">
                             Shop By Category
                         </h4>
 
-                        <ul
-                            class="list-group list-group-flush"
-                        >
-
-                            <li
-                                class="list-group-item border-0 ps-0"
-                            >
-                                💻 Gaming Laptops
+                        <ul class="list-group list-group-flush category-list">
+                            <li class="list-group-item border-0 ps-0 category-item">
+                                <router-link to="/laptops?category=Gaming" class="text-decoration-none text-dark d-flex align-items-center">
+                                    <span class="cat-icon bg-primary-subtle text-primary"><i class="bi bi-controller"></i></span>
+                                    <span class="fw-medium">Gaming Laptops</span>
+                                    <i class="bi bi-chevron-right ms-auto small text-muted"></i>
+                                </router-link>
                             </li>
-
-                            <li
-                                class="list-group-item border-0 ps-0"
-                            >
-                                🏢 Business Laptops
+                            <li class="list-group-item border-0 ps-0 category-item">
+                                <router-link to="/laptops?category=Business" class="text-decoration-none text-dark d-flex align-items-center">
+                                    <span class="cat-icon bg-info-subtle text-info"><i class="bi bi-briefcase"></i></span>
+                                    <span class="fw-medium">Business Laptops</span>
+                                    <i class="bi bi-chevron-right ms-auto small text-muted"></i>
+                                </router-link>
                             </li>
-
-                            <li
-                                class="list-group-item border-0 ps-0"
-                            >
-                                🎓 Student Laptops
+                            <li class="list-group-item border-0 ps-0 category-item">
+                                <router-link to="/laptops?category=Student" class="text-decoration-none text-dark d-flex align-items-center">
+                                    <span class="cat-icon bg-warning-subtle text-warning"><i class="bi bi-backpack"></i></span>
+                                    <span class="fw-medium">Student Laptops</span>
+                                    <i class="bi bi-chevron-right ms-auto small text-muted"></i>
+                                </router-link>
                             </li>
-
-                            <li
-                                class="list-group-item border-0 ps-0"
-                            >
-                                🍎 MacBooks
+                            <li class="list-group-item border-0 ps-0 category-item">
+                                <router-link to="/laptops?brand=Apple" class="text-decoration-none text-dark d-flex align-items-center">
+                                    <span class="cat-icon bg-secondary-subtle text-secondary"><i class="bi bi-apple"></i></span>
+                                    <span class="fw-medium">MacBooks</span>
+                                    <i class="bi bi-chevron-right ms-auto small text-muted"></i>
+                                </router-link>
                             </li>
-
-                            <li
-                                class="list-group-item border-0 ps-0"
-                            >
-                                ⚡ Accessories
+                            <li class="list-group-item border-0 ps-0 category-item">
+                                <router-link to="/accessories" class="text-decoration-none text-dark d-flex align-items-center">
+                                    <span class="cat-icon bg-danger-subtle text-danger"><i class="bi bi-mouse3"></i></span>
+                                    <span class="fw-medium">Accessories</span>
+                                    <i class="bi bi-chevron-right ms-auto small text-muted"></i>
+                                </router-link>
                             </li>
-
                         </ul>
-
                     </div>
 
                 </div>
@@ -66,41 +70,35 @@
                 <!-- Products -->
                 <div class="col-lg-9">
 
-                    <div
-                        class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
-                    >
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
                         <div>
-                            <h2 class="fw-bold mb-1">
-                                Popular Laptops
+                            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2 text-dark">
+                                Popular Laptops <i class="bi bi-stars text-warning fs-4"></i>
                             </h2>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">{{ message }}</p>
                         </div>
 
-                        <div class="d-flex gap-2 align-items-center">
-                            <div class="input-group" style="max-width: 280px;">
+                        <div class="d-flex gap-2 align-items-center w-100 w-md-auto">
+                            <div class="input-group search-group flex-grow-1 flex-md-grow-0">
+                                <span class="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-pill">
+                                    <i class="bi bi-search"></i>
+                                </span>
                                 <input
                                     type="search"
-                                    class="form-control search-input"
+                                    class="form-control border-start-0 ps-0 shadow-none rounded-end-pill"
                                     placeholder="Search laptops..."
                                     v-model="searchQuery"
                                     @keyup.enter="searchProducts"
-                                    style="border-right: none;"
                                 />
-                                <button
-                                    class="btn btn-primary"
-                                    type="button"
-                                    @click="searchProducts"
-                                >
-                                    <i class="bi bi-search"></i> Search
-                                </button>
                             </div>
 
                             <router-link
                                 to="/laptops"
-                                class="btn btn-outline-primary rounded-pill px-4 text-nowrap"
+                                class="btn btn-primary rounded-pill px-3 px-md-4 text-nowrap d-flex align-items-center gap-2"
                             >
-                                View All
+                                <span class="d-none d-sm-inline">View All</span>
+                                <i class="bi bi-arrow-right d-sm-none"></i>
                             </router-link>
                         </div>
 
@@ -109,28 +107,27 @@
                     <!-- Loading -->
                     <div
                         v-if="loading"
-                        class="text-center py-5"
+                        class="text-center py-5 d-flex flex-column align-items-center"
                     >
-                        Loading products...
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <span class="text-muted">Loading best products...</span>
                     </div>
 
                     <!-- Products Grid -->
                     <div
                         v-else
-                        class="row g-4"
+                        class="row g-3 g-md-4"
                     >
-
                         <div
-                            class="col-lg-4 col-md-6"
-                            v-for="product in products"
+                            class="col-6 col-md-4 col-xl-3 fade-in-up"
+                            v-for="(product, index) in products"
                             :key="product.id"
+                            :style="{ animationDelay: `${index * 0.05}s` }"
                         >
-
                             <router-link
                                 :to="`/product/${product.id}`"
-                                class="text-decoration-none"
+                                class="text-decoration-none h-100 d-block"
                             >
-
                                 <ProductCard
                                     :product="product"
                                     :title="product.title"
@@ -138,11 +135,16 @@
                                     :price="product.sale_price || product.price"
                                     :image="product.thumbnail || product.images?.[0]?.image"
                                 />
-
                             </router-link>
-
                         </div>
-
+                        
+                        <!-- Empty State -->
+                        <div v-if="products.length === 0" class="col-12 text-center py-5 bg-white rounded-4 shadow-sm border mt-3">
+                            <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                            <h5 class="fw-bold">No products found</h5>
+                            <p class="text-muted">Try a different search term or browse all laptops.</p>
+                            <button class="btn btn-outline-primary rounded-pill px-4 mt-2" @click="searchQuery=''; searchProducts()">Clear Search</button>
+                        </div>
                     </div>
 
                 </div>
@@ -163,18 +165,18 @@ import MainLayout from '../Layouts/MainLayout.vue'
 import HeroSlider from '../Components/HeroSlider.vue'
 import ProductCard from '../Components/ProductCard.vue'
 import FeatureBar from '../Components/FeatureBar.vue'
-import { addItem } from '../utils/localList'
 
 const products = ref([])
 const loading = ref(true)
 const searchQuery = ref('')
 const message = ref('Popular laptops hand-picked for you.')
+const showCategories = ref(false)
 
 const getProducts = async (params = {}) => {
     loading.value = true
 
     try {
-        const q = query(collection(db, "products"), limit(8))
+        const q = query(collection(db, "products"), limit(12))
         const querySnapshot = await getDocs(q)
         const prods = []
         querySnapshot.forEach((doc) => {
@@ -208,15 +210,60 @@ const searchProducts = async () => {
     await getProducts({ search: searchQuery.value || undefined })
 }
 
-const addToWishlist = (product) => {
-    addItem('wishlist', product)
-}
-
-const addToCompare = (product) => {
-    addItem('compare', product)
-}
-
 onMounted(() => {
     getProducts()
 })
 </script>
+
+<style scoped>
+.category-item {
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.category-item a {
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.category-item:hover a {
+    background-color: var(--bg);
+    transform: translateX(5px);
+}
+
+.category-item:hover .bi-chevron-right {
+    color: var(--primary) !important;
+    transform: translateX(3px);
+}
+
+.cat-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+.search-group {
+    border: 1px solid #e2e8f0;
+    border-radius: 50px;
+    overflow: hidden;
+    transition: var(--transition);
+    max-width: 300px;
+}
+
+.search-group:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+@media (max-width: 767px) {
+    .search-group {
+        max-width: 100%;
+    }
+}
+</style>

@@ -1,173 +1,213 @@
 <template>
     <MainLayout>
 
-        <section class="container py-5">
+        <section class="container py-4 py-lg-5">
 
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
 
                 <div>
-                    <h1 class="fw-bold page-title">
+                    <h1 class="fw-bold page-title mb-1">
                         Premium Laptops
                     </h1>
 
-                    <p class="text-muted">
+                    <p class="text-muted mb-0">
                         Discover powerful laptops for gaming,
                         business and productivity.
                     </p>
                 </div>
 
-                <div class="d-flex align-items-center gap-2 w-100 justify-content-end flex-wrap">
-                    <input
-                        type="search"
-                        class="form-control search-input"
-                        v-model="searchQuery"
-                        placeholder="Search laptops..."
-                    />
+                <div class="d-flex flex-wrap align-items-center gap-2 justify-content-md-end filter-controls">
+                    <!-- Mobile Filter Toggle -->
+                    <button class="btn btn-outline-primary d-lg-none" @click="mobileFiltersOpen = true">
+                        <i class="bi bi-funnel"></i> Filters
+                    </button>
+                    
+                    <div class="search-input-wrapper flex-grow-1 flex-md-grow-0">
+                        <i class="bi bi-search search-icon"></i>
+                        <input
+                            type="search"
+                            class="form-control search-input"
+                            v-model="searchQuery"
+                            placeholder="Search laptops..."
+                        />
+                    </div>
 
-                    <span class="badge bg-primary text-white fs-6">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill d-none d-sm-inline-block">
                         {{ productCount }} products
                     </span>
 
-                    <select class="form-select per-page-select" v-model.number="perPage">
+                    <select class="form-select per-page-select d-none d-md-block" v-model.number="perPage">
                         <option :value="12">12 / page</option>
                         <option :value="24">24 / page</option>
                         <option :value="36">36 / page</option>
                     </select>
 
                     <select class="form-select sort-box" v-model="selectedSort">
-                        <option value="latest">Sort By Latest</option>
-                        <option value="low">Low to High</option>
-                        <option value="high">High to Low</option>
+                        <option value="latest">Sort: Latest</option>
+                        <option value="low">Price: Low to High</option>
+                        <option value="high">Price: High to Low</option>
                     </select>
                 </div>
 
             </div>
 
-            <div v-if="activeFilters.length" class="mb-4 d-flex flex-wrap align-items-center gap-2">
-                <span class="text-muted me-2">Active filters:</span>
+            <div v-if="activeFilters.length" class="mb-4 d-flex flex-wrap align-items-center gap-2 bg-white p-3 rounded-4 shadow-sm border">
+                <span class="text-muted me-2 small fw-semibold"><i class="bi bi-funnel-fill me-1"></i> Active filters:</span>
                 <span
-                    class="badge bg-secondary"
+                    class="badge bg-light text-dark border px-2 py-1 rounded-pill fw-medium d-flex align-items-center"
                     v-for="filter in activeFilters"
                     :key="filter"
                 >
                     {{ filter }}
                 </span>
                 <button
-                    class="btn btn-sm btn-outline-primary ms-2"
+                    class="btn btn-sm btn-link text-danger text-decoration-none ms-auto fw-medium"
                     @click="clearFilters"
                 >
-                    Clear Filters
+                    Clear All
                 </button>
             </div>
 
             <div class="row">
 
-                <!-- Sidebar -->
-                <div class="col-lg-3 mb-4">
+                <!-- Mobile Filter Backdrop -->
+                <div v-if="mobileFiltersOpen" class="mobile-filter-backdrop d-lg-none" @click="mobileFiltersOpen = false"></div>
 
-                    <div class="filter-card">
+                <!-- Sidebar Filters -->
+                <div class="col-lg-3 filter-sidebar-wrapper" :class="{ 'open': mobileFiltersOpen }">
 
-                        <h4 class="fw-bold mb-4">
-                            Filters
+                    <div class="filter-card h-100 overflow-auto">
+                        
+                        <!-- Mobile Header -->
+                        <div class="d-flex justify-content-between align-items-center d-lg-none mb-4 pb-3 border-bottom">
+                            <h4 class="fw-bold mb-0">Filters</h4>
+                            <button class="btn-close" @click="mobileFiltersOpen = false"></button>
+                        </div>
+
+                        <h4 class="fw-bold mb-4 d-none d-lg-block d-flex align-items-center">
+                            <i class="bi bi-sliders text-primary me-2"></i> Filters
                         </h4>
 
-                        <div class="mb-4">
-
-                            <h6 class="fw-bold">
+                        <!-- Brand Filter -->
+                        <div class="filter-section mb-4">
+                            <h6 class="fw-bold d-flex justify-content-between align-items-center cursor-pointer" @click="toggleSection('brand')">
                                 Brand
+                                <i class="bi" :class="sections.brand ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                             </h6>
 
-                            <div class="form-check" v-for="brand in availableBrands" :key="brand.name">
-                                <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    :value="brand.name"
-                                    v-model="selectedBrands"
-                                    :id="`brand-${brand.name}`"
-                                    :disabled="!selectedBrands.includes(brand.name) && brand.count === 0"
-                                >
-                                <label class="form-check-label" :for="`brand-${brand.name}`">
-                                    {{ brand.name }}
-                                    <small class="text-muted">({{ brand.count }})</small>
-                                </label>
+                            <div class="filter-options mt-3" v-show="sections.brand">
+                                <div class="form-check custom-check mb-2" v-for="brand in availableBrands" :key="brand.name">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        :value="brand.name"
+                                        v-model="selectedBrands"
+                                        :id="`brand-${brand.name}`"
+                                        :disabled="!selectedBrands.includes(brand.name) && brand.count === 0"
+                                    >
+                                    <label class="form-check-label d-flex justify-content-between text-muted" :for="`brand-${brand.name}`">
+                                        {{ brand.name }}
+                                        <span class="badge bg-light text-secondary rounded-pill border">{{ brand.count }}</span>
+                                    </label>
+                                </div>
                             </div>
-
                         </div>
 
-                    <div class="mt-4">
+                        <hr class="border-light opacity-100 my-4">
 
-                        <h6 class="fw-bold">
-                            Category
-                        </h6>
+                        <!-- Category Filter -->
+                        <div class="filter-section mb-4">
+                            <h6 class="fw-bold d-flex justify-content-between align-items-center cursor-pointer" @click="toggleSection('category')">
+                                Category
+                                <i class="bi" :class="sections.category ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                            </h6>
 
-                        <div class="form-check" v-for="category in availableCategories" :key="category.name">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                :value="category.name"
-                                v-model="selectedCategories"
-                                :id="`category-${category.name}`"
-                                :disabled="!selectedCategories.includes(category.name) && category.count === 0"
-                            >
-                            <label class="form-check-label" :for="`category-${category.name}`">
-                                {{ category.name }}
-                                <small class="text-muted">({{ category.count }})</small>
-                            </label>
+                            <div class="filter-options mt-3" v-show="sections.category">
+                                <div class="form-check custom-check mb-2" v-for="category in availableCategories" :key="category.name">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        :value="category.name"
+                                        v-model="selectedCategories"
+                                        :id="`category-${category.name}`"
+                                        :disabled="!selectedCategories.includes(category.name) && category.count === 0"
+                                    >
+                                    <label class="form-check-label d-flex justify-content-between text-muted" :for="`category-${category.name}`">
+                                        {{ category.name }}
+                                        <span class="badge bg-light text-secondary rounded-pill border">{{ category.count }}</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
-                    </div>
+                        <hr class="border-light opacity-100 my-4">
 
-                    <div class="mt-4">
+                        <!-- Price Filter -->
+                        <div class="filter-section mb-4">
+                            <h6 class="fw-bold d-flex justify-content-between align-items-center cursor-pointer" @click="toggleSection('price')">
+                                Price
+                                <i class="bi" :class="sections.price ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                            </h6>
 
-                        <h6 class="fw-bold">
-                            Price
-                        </h6>
+                            <div class="filter-options mt-3" v-show="sections.price">
+                                <div class="price-labels d-flex justify-content-between mb-2 text-primary fw-bold">
+                                    <span>${{ priceRange.min }}</span>
+                                    <span>${{ selectedPriceMax }}</span>
+                                </div>
 
-                        <div class="d-flex justify-content-between mb-2">
-                            <small>${{ priceRange.min }}</small>
-                            <small>${{ selectedPriceMax }}</small>
+                                <input
+                                    type="range"
+                                    class="form-range custom-range"
+                                    :min="priceRange.min"
+                                    :max="priceRange.max"
+                                    v-model.number="selectedPriceMax"
+                                >
+                            </div>
                         </div>
 
-                        <input
-                            type="range"
-                            class="form-range"
-                            :min="priceRange.min"
-                            :max="priceRange.max"
-                            v-model.number="selectedPriceMax"
+                        <button
+                            class="btn btn-primary w-100 mt-4 py-2 fw-bold d-lg-none"
+                            @click="mobileFiltersOpen = false"
                         >
+                            Apply Filters
+                        </button>
+                        <button
+                            class="btn btn-outline-secondary w-100 mt-2 py-2"
+                            @click="clearFilters"
+                        >
+                            Clear Filters
+                        </button>
 
                     </div>
-
-                    <button
-                        class="btn btn-outline-secondary w-100 mt-4"
-                        @click="clearFilters"
-                    >
-                        Clear Filters
-                    </button>
-
-                </div>
 
                 </div>
 
                 <!-- Products -->
                 <div class="col-lg-9">
 
-                    <div class="row g-4">
+                    <div class="row g-3 g-md-4">
 
-                        <div v-if="loading" class="text-center py-5">
-                            Loading laptops...
+                        <div v-if="loading" class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <p class="text-muted">Loading laptops...</p>
                         </div>
 
-                        <div v-else-if="products.length === 0" class="text-center py-5">
-                            No laptops match your filters.
+                        <div v-else-if="products.length === 0" class="col-12 text-center py-5 bg-white rounded-4 border shadow-sm mt-2">
+                            <div class="py-5">
+                                <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                                <h4 class="fw-bold">No laptops match your filters</h4>
+                                <p class="text-muted mb-4">Try adjusting your price range, or removing some brand/category filters.</p>
+                                <button class="btn btn-primary rounded-pill px-4" @click="clearFilters">Clear All Filters</button>
+                            </div>
                         </div>
 
                         <template v-else>
                             <div
-                                class="col-xl-4 col-md-6"
-                                v-for="product in products"
+                                class="col-6 col-md-4 fade-in-up"
+                                v-for="(product, index) in products"
                                 :key="product.id"
+                                :style="{ animationDelay: `${index * 0.05}s` }"
                             >
                                 <router-link
                                     :to="`/product/${product.id}`"
@@ -186,47 +226,40 @@
 
                     </div>
 
-                </div>
+                    <!-- Pagination -->
+                    <div v-if="products.length > 0" class="mt-5 d-flex justify-content-center">
+                        <div class="pagination-wrapper bg-white shadow-sm rounded-pill p-2 border d-inline-flex gap-1">
+                            <button
+                                class="btn btn-icon rounded-circle"
+                                :disabled="!hasPreviousPage"
+                                @click="goToPage(currentPage - 1)"
+                            >
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
 
-                <div class="col-12 mt-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <button
-                            class="btn btn-outline-primary"
-                            :disabled="!hasPreviousPage"
-                            @click="goToPage(currentPage - 1)"
-                        >
-                            Previous
-                        </button>
-
-                        <div class="pagination-buttons btn-group">
                             <template v-for="page in pageNumbers" :key="page">
                                 <button
                                     v-if="page !== '...'"
                                     type="button"
-                                    class="btn"
-                                    :class="page === currentPage ? 'btn-primary text-white' : 'btn-outline-secondary'"
+                                    class="btn rounded-circle page-btn"
+                                    :class="page === currentPage ? 'btn-primary text-white shadow-sm' : 'btn-light text-muted'"
                                     @click="goToPage(page)"
                                 >
                                     {{ page }}
                                 </button>
-
-                                <span
-                                    v-else
-                                    class="btn btn-outline-secondary disabled"
-                                >
-                                    …
-                                </span>
+                                <span v-else class="btn disabled px-1 text-muted border-0">…</span>
                             </template>
-                        </div>
 
-                        <button
-                            class="btn btn-outline-primary"
-                            :disabled="!hasNextPage"
-                            @click="goToPage(currentPage + 1)"
-                        >
-                            Next
-                        </button>
+                            <button
+                                class="btn btn-icon rounded-circle"
+                                :disabled="!hasNextPage"
+                                @click="goToPage(currentPage + 1)"
+                            >
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
+
                 </div>
 
             </div>
@@ -241,7 +274,6 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { db } from '../firebase_config'
 import { collection, getDocs } from 'firebase/firestore'
-import { addItem, removeItem, hasItem } from '../utils/localList'
 
 import MainLayout from '../Layouts/MainLayout.vue'
 import ProductCard from '../Components/ProductCard.vue'
@@ -261,6 +293,17 @@ const perPage = ref(Number(route.query.per_page || 12))
 const pagination = ref({})
 const priceRange = ref({ min: 0, max: 0 })
 
+const mobileFiltersOpen = ref(false)
+const sections = ref({
+    brand: true,
+    category: true,
+    price: true
+})
+
+const toggleSection = (section) => {
+    sections.value[section] = !sections.value[section]
+}
+
 const availableBrands = computed(() => brands.value)
 const availableCategories = computed(() => categories.value)
 
@@ -269,26 +312,9 @@ const activeFilters = computed(() => {
     if (searchQuery.value.trim()) filters.push(`Search: ${searchQuery.value.trim()}`)
     if (selectedBrands.value.length) filters.push(`Brand: ${selectedBrands.value.join(', ')}`)
     if (selectedCategories.value.length) filters.push(`Category: ${selectedCategories.value.join(', ')}`)
-    if (selectedPriceMax.value < priceRange.value.max) filters.push(`Price up to $${selectedPriceMax.value}`)
-    if (selectedSort.value !== 'latest') filters.push(selectedSort.value === 'low' ? 'Price: Low to High' : 'Price: High to Low')
+    if (selectedPriceMax.value < priceRange.value.max) filters.push(`Up to $${selectedPriceMax.value}`)
     return filters
 })
-
-const toggleWishlist = (product) => {
-    if (hasItem('wishlist', product.id)) {
-        removeItem('wishlist', product.id)
-    } else {
-        addItem('wishlist', product)
-    }
-}
-
-const toggleCompare = (product) => {
-    if (hasItem('compare', product.id)) {
-        removeItem('compare', product.id)
-    } else {
-        addItem('compare', product)
-    }
-}
 
 const productCount = computed(() => pagination.value.total || products.value.length)
 
@@ -360,7 +386,8 @@ const getFilterMetadata = async () => {
         { name: 'HP', count: 1 },
         { name: 'Dell', count: 1 },
         { name: 'Lenovo', count: 1 },
-        { name: 'ASUS', count: 1 }
+        { name: 'ASUS', count: 1 },
+        { name: 'MSI', count: 0 }
     ]
     categories.value = [
         { name: 'Gaming', count: 1 },
@@ -368,7 +395,7 @@ const getFilterMetadata = async () => {
         { name: 'Student', count: 1 },
         { name: 'Creator', count: 1 }
     ]
-    updatePriceRange(0, 5000)
+    updatePriceRange(200, 5000)
 }
 
 watch([
@@ -409,6 +436,15 @@ const goToPage = (page) => {
     currentPage.value = 1
 }
 
+// Lock body scroll when mobile filter is open
+watch(mobileFiltersOpen, (isOpen) => {
+    if (isOpen) {
+        document.body.style.overflow = 'hidden'
+    } else {
+        document.body.style.overflow = ''
+    }
+})
+
 onMounted(() => {
     if (route.query.brand) selectedBrands.value = Array.isArray(route.query.brand) ? route.query.brand : [route.query.brand]
     if (route.query.category) selectedCategories.value = Array.isArray(route.query.category) ? route.query.category : [route.query.category]
@@ -418,29 +454,161 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-title{
-    font-size:42px;
+.page-title {
+    font-size: 2.2rem;
+    color: var(--dark);
+    letter-spacing: -0.5px;
 }
 
-.sort-box{
-    width:220px;
-    border-radius:14px;
+.search-input-wrapper {
+    position: relative;
+    max-width: 250px;
 }
 
-.filter-card{
-    background:white;
-    border-radius:25px;
-    padding:30px;
-    box-shadow:0 5px 25px rgba(0,0,0,.05);
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
 }
 
 .search-input {
-    min-width: 220px;
-    max-width: 320px;
+    padding-left: 38px;
     border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    box-shadow: 0 0 0 3px var(--primary-glow);
+    border-color: var(--primary);
+}
+
+.sort-box {
+    border-radius: 999px;
+    width: auto;
+    min-width: 170px;
+    border-color: #e2e8f0;
+    cursor: pointer;
 }
 
 .per-page-select {
-    width: 140px;
+    border-radius: 999px;
+    width: 120px;
+    border-color: #e2e8f0;
+}
+
+/* Sidebar Styles */
+.filter-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: var(--shadow-sm);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+    user-select: none;
+}
+
+.cursor-pointer:hover {
+    color: var(--primary);
+}
+
+.custom-check .form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.15em;
+    border-color: #cbd5e1;
+}
+
+.custom-check .form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.custom-range::-webkit-slider-thumb {
+    background: var(--primary);
+}
+
+/* Pagination */
+.page-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--dark);
+    border: none;
+}
+
+.btn-icon:hover:not(:disabled) {
+    background: #f1f5f9;
+}
+
+/* Mobile Filter Drawer */
+@media (max-width: 991px) {
+    .page-title {
+        font-size: 1.8rem;
+    }
+
+    .filter-controls {
+        width: 100%;
+        justify-content: space-between !important;
+    }
+
+    .search-input-wrapper {
+        max-width: 100%;
+    }
+
+    .sort-box {
+        flex-grow: 1;
+    }
+
+    .mobile-filter-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1040;
+    }
+
+    .filter-sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 85%;
+        max-width: 350px;
+        height: 100vh;
+        z-index: 1050;
+        transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 0;
+    }
+
+    .filter-sidebar-wrapper.open {
+        right: 0;
+    }
+
+    .filter-card {
+        border-radius: 0;
+        height: 100%;
+        border: none;
+        box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+    }
 }
 </style>
