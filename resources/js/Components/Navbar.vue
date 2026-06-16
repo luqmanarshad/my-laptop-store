@@ -77,12 +77,12 @@
                                     <small class="text-muted">{{ store.user.email }}</small>
                                 </li>
                                 <li>
-                                    <router-link v-if="store.user.isAdmin" to="/dashboard" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold">
-                                        <i class="bi bi-grid-fill me-2 text-primary"></i> Product Manager
+                                    <router-link v-if="store.user.isAdmin" to="/dashboard?tab=overview" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-primary">
+                                        <i class="bi bi-speedometer2 me-2"></i> Admin Dashboard
                                     </router-link>
                                 </li>
                                 <li>
-                                    <router-link v-if="store.user.isAdmin" to="/admin/orders" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-primary">
+                                    <router-link v-if="store.user.isAdmin" to="/admin/orders" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold">
                                         <i class="bi bi-box-seam me-2"></i> Manage Orders
                                     </router-link>
                                 </li>

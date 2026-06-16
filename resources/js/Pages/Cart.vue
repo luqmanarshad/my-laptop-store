@@ -402,7 +402,7 @@
                                         <div class="col-sm-7 col-md-6 col-lg-5">
                                             <div class="d-flex justify-content-between mb-2 small text-muted">
                                                 <span>Subtotal</span>
-                                                <span class="fw-medium text-dark">Rs. {{ Number(placedOrder?.total_amount || 0).toFixed(2) }}</span>
+                                                <span class="fw-medium text-dark">Rs. {{ calculatePlacedOrderTotal(placedOrder).toFixed(2) }}</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-3 small text-success">
                                                 <span>Shipping</span>
@@ -410,7 +410,7 @@
                                             </div>
                                             <div class="d-flex justify-content-between border-top pt-3">
                                                 <span class="fw-bold text-dark">Grand Total</span>
-                                                <span class="fw-extrabold text-primary fs-5">Rs. {{ Number(placedOrder?.total_amount || 0).toFixed(2) }}</span>
+                                                <span class="fw-extrabold text-primary fs-5">Rs. {{ calculatePlacedOrderTotal(placedOrder).toFixed(2) }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -469,6 +469,15 @@ const form = ref({
 // Placed order data for success step
 const placedOrder = ref(null)
 
+const calculatePlacedOrderTotal = (order) => {
+    if (!order) return 0
+    if (order.total_amount) return order.total_amount
+    if (order.items) {
+        return order.items.reduce((t, item) => t + (item.price * item.quantity), 0)
+    }
+    return 0
+}
+
 const subtotal = computed(() => {
     return store.cart.reduce((t, i) => t + i.price * i.quantity, 0)
 })
@@ -512,7 +521,7 @@ const triggerCheckout = async () => {
 
     checkoutLoading.value = true
     try {
-        const orderData = { ...form.value }
+        const orderData = { ...form.value, total_amount: total.value }
         const response = await store.processCheckout(orderData)
         placedOrder.value = response.order
         step.value = 'success'
@@ -714,6 +723,59 @@ const triggerCheckout = async () => {
     }
     .remove-item-btn-mobile {
         top: 1rem;
+    }
+}
+
+@media print {
+    body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Hide layout wrapper elements during printing */
+    header, footer, nav, button, .btn, .d-flex.flex-column.flex-sm-row, .text-center.mb-5, .success-checkmark-wrapper {
+        display: none !important;
+    }
+
+    .container, section, .row, .col-12 {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    .invoice-container {
+        border: none !important;
+        background: white !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .invoice-container * {
+        color: #000 !important;
+    }
+    
+    .invoice-container .bg-primary {
+        background-color: #0d6efd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .invoice-container .badge {
+        border: 1px solid #000 !important;
+        background: transparent !important;
+        color: #000 !important;
     }
 }
 </style>
