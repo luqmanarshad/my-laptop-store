@@ -278,6 +278,17 @@
                                 </div>
                             </div>
 
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold text-secondary small">Store Phone</label>
+                                    <input type="tel" class="form-control rounded-3" v-model="form.phone" placeholder="e.g. +91 98765 43210" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold text-secondary small">Store Address</label>
+                                    <input type="text" class="form-control rounded-3" v-model="form.address" placeholder="e.g. 123 Main St, Pune" />
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-semibold text-secondary small">Thumbnail Image URL</label>
                                 <input type="text" class="form-control rounded-3" v-model="form.thumbnail" placeholder="https://example.com/image.jpg" />
@@ -500,6 +511,8 @@ const form = ref({
     sale_price: null,
     stock: 0,
     sku: '',
+    phone: '+923004619737',
+    address: '',
     thumbnail: '',
     featured: false,
     status: true,
@@ -617,6 +630,8 @@ const resetForm = () => {
         battery: '',
         os: '',
         weight: '',
+        phone: '',
+        address: '',
         custom_specs: []
     }
     alertMessage.value = ''
@@ -649,6 +664,8 @@ const saveProduct = async () => {
             sale_price: form.value.sale_price,
             stock: form.value.stock,
             sku: form.value.sku,
+            phone: form.value.phone,
+            address: form.value.address,
             thumbnail: form.value.thumbnail,
             featured: form.value.featured,
             status: form.value.status,
@@ -701,6 +718,8 @@ const editProduct = (product) => {
         sale_price: product.sale_price,
         stock: product.stock,
         sku: product.sku || '',
+        phone: product.phone || '',
+        address: product.address || '',
         thumbnail: product.thumbnail || '',
         featured: product.featured,
         status: product.status,
