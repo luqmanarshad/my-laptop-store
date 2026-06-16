@@ -118,7 +118,6 @@ const submitLogin = async () => {
     localStorage.setItem('api_token', 'firebase-token') // keep for app.js route guards
     
     await store.fetchUser()
-    store.addToast(`Welcome back, ${store.user?.name || 'User'}!`, 'success')
 
     if (form.value.email === 'luqmanarshad469@gmail.com') {
       router.push('/dashboard')

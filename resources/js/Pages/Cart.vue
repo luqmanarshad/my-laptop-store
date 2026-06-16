@@ -404,13 +404,13 @@
                                                 <span>Subtotal</span>
                                                 <span class="fw-medium text-dark">Rs. {{ calculatePlacedOrderTotal(placedOrder).toFixed(2) }}</span>
                                             </div>
-                                            <div class="d-flex justify-content-between mb-3 small text-success">
-                                                <span>Shipping</span>
-                                                <span class="fw-medium">Free</span>
+                                            <div class="d-flex justify-content-between mb-3 small text-muted">
+                                                <span>Shipping Charges</span>
+                                                <span class="fw-medium text-dark">Rs. 300</span>
                                             </div>
                                             <div class="d-flex justify-content-between border-top pt-3">
                                                 <span class="fw-bold text-dark">Grand Total</span>
-                                                <span class="fw-extrabold text-primary fs-5">Rs. {{ calculatePlacedOrderTotal(placedOrder).toFixed(2) }}</span>
+                                                <span class="fw-extrabold text-primary fs-5">Rs. {{ (calculatePlacedOrderTotal(placedOrder) + 300).toFixed(2) }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -517,11 +517,19 @@ const triggerCheckout = async () => {
             store.addToast('Please fill in all Payment Verification fields.', 'warning')
             return
         }
+        
+        // Validate payment amount matches order total
+        const expectedAmount = (total.value + 300)
+        const providedAmount = Number(form.value.payment_amount)
+        if (Math.abs(providedAmount - expectedAmount) > 0.01) {
+            store.addToast(`Payment amount must be Rs. ${expectedAmount.toFixed(2)}. You entered Rs. ${providedAmount.toFixed(2)}.`, 'danger')
+            return
+        }
     }
 
     checkoutLoading.value = true
     try {
-        const orderData = { ...form.value, total_amount: total.value }
+        const orderData = { ...form.value, total_amount: total.value + 300 }
         const response = await store.processCheckout(orderData)
         placedOrder.value = response.order
         step.value = 'success'

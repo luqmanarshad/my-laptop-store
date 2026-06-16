@@ -64,12 +64,16 @@ export const store = reactive({
                     if (userDoc.exists() && userDoc.data().role === 'admin') {
                         isAdmin = true
                     }
-                    // Fallback for hardcoded admin
+                    // Fallback: Check hardcoded admin email
                     if (authUser.email === 'luqmanarshad469@gmail.com') {
                         isAdmin = true
                     }
                 } catch (e) {
-                    console.error('Error fetching user role:', e)
+                    // Fallback for hardcoded admin if Firestore check fails
+                    if (authUser.email === 'luqmanarshad469@gmail.com') {
+                        isAdmin = true
+                    }
+                    console.warn('Unable to verify admin role from Firestore:', e)
                 }
 
                 this.user = { 
@@ -107,7 +111,6 @@ export const store = reactive({
             console.error('Logout error:', error)
         } finally {
             this.clearSession()
-            this.addToast('Logged out successfully', 'info')
             if (this.router) {
                 this.router.push('/login')
             } else {
@@ -297,6 +300,33 @@ export const store = reactive({
     async processCheckout(checkoutData) {
         try {
             const userId = auth.currentUser ? auth.currentUser.uid : 'guest'
+            
+            // Validate stock and prices for all items before processing
+            for (const item of this.cart) {
+                try {
+                    const productDoc = await getDoc(doc(db, "products", item.product_id))
+                    if (!productDoc.exists()) {
+                        throw new Error(`Product ${item.product_id} no longer exists`)
+                    }
+                    const currentProduct = productDoc.data()
+                    
+                    // Check stock availability
+                    if (currentProduct.stock < item.quantity) {
+                        throw new Error(`Insufficient stock for ${item.product?.title}. Only ${currentProduct.stock} available.`)
+                    }
+                    
+                    // Verify price hasn't changed drastically (allow 5% variance)
+                    const currentPrice = currentProduct.sale_price || currentProduct.price
+                    const cartPrice = item.price
+                    const priceVariance = Math.abs(currentPrice - cartPrice) / cartPrice
+                    if (priceVariance > 0.05) {
+                        throw new Error(`Price for ${item.product?.title} has changed from Rs. ${cartPrice} to Rs. ${currentPrice}. Please review your cart.`)
+                    }
+                } catch (e) {
+                    this.addToast(e.message || 'Failed to validate cart items', 'danger')
+                    throw e
+                }
+            }
             
             const orderData = {
                  user_id: userId,
