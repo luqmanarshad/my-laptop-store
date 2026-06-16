@@ -47,11 +47,11 @@
             <div class="mt-auto pt-3 pb-3">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="current-price">
-                        ${{ product.sale_price || product.price }}
+                        Rs. {{ product.sale_price || product.price }}
                     </span>
 
                     <span v-if="product.sale_price" class="old-price text-decoration-line-through text-muted small">
-                        ${{ product.price }}
+                        Rs. {{ product.price }}
                     </span>
 
                     <span v-if="product.sale_price" class="discount-badge d-none d-sm-inline-block">

@@ -47,11 +47,11 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <label class="form-label fw-semibold text-secondary small">Price ($)</label>
+                            <label class="form-label fw-semibold text-secondary small">Price (Rs.)</label>
                             <input type="number" class="form-control rounded-3" v-model.number="form.price" placeholder="Base price" />
                         </div>
                         <div class="col-6">
-                            <label class="form-label fw-semibold text-secondary small">Sale Price ($)</label>
+                            <label class="form-label fw-semibold text-secondary small">Sale Price (Rs.)</label>
                             <input type="number" class="form-control rounded-3" v-model.number="form.sale_price" placeholder="Discount price" />
                         </div>
                     </div>
@@ -207,7 +207,7 @@
                                     </td>
                                     <td>{{ product.brand?.name }}</td>
                                     <td>{{ product.category?.name }}</td>
-                                    <td class="fw-bold text-primary">${{ product.sale_price || product.price }}</td>
+                                    <td class="fw-bold text-primary">Rs. {{ product.sale_price || product.price }}</td>
                                     <td>
                                         <span class="badge rounded-pill px-2 py-1" :class="product.status ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
                                             {{ product.status ? 'Active' : 'Inactive' }}

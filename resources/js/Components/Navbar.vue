@@ -77,13 +77,13 @@
                                     <small class="text-muted">{{ store.user.email }}</small>
                                 </li>
                                 <li>
-                                    <router-link to="/orders" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold">
-                                        <i class="bi bi-bag-check me-2 text-primary"></i> My Orders
+                                    <router-link v-if="store.user.isAdmin" to="/dashboard" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold">
+                                        <i class="bi bi-grid-fill me-2 text-primary"></i> Product Manager
                                     </router-link>
                                 </li>
                                 <li>
-                                    <router-link v-if="store.user.isAdmin" to="/dashboard" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-primary">
-                                        <i class="bi bi-plus-circle me-2"></i> Add Product
+                                    <router-link v-if="store.user.isAdmin" to="/admin/orders" @click="userDropdownOpen = false" class="dropdown-item rounded-3 py-2 px-3 fw-semibold text-primary">
+                                        <i class="bi bi-box-seam me-2"></i> Manage Orders
                                     </router-link>
                                 </li>
                                 <li><hr class="dropdown-divider border-light"></li>

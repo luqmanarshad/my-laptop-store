@@ -65,7 +65,7 @@
                                             
                                             <!-- Mobile Price & Qty Controls (stacked) -->
                                             <div class="d-md-none mt-3 d-flex align-items-center justify-content-between">
-                                                <div class="fw-bold text-primary fs-5">${{ (item.price * item.quantity).toFixed(2) }}</div>
+                                                <div class="fw-bold text-primary fs-5">Rs. {{ (item.price * item.quantity).toFixed(2) }}</div>
                                                 
                                                 <div class="quantity-controller d-flex align-items-center border rounded-pill p-1 bg-light">
                                                     <button class="qty-btn btn border-0 rounded-circle" @click="store.updateCartQuantity(item.id, item.quantity - 1)" :disabled="item.quantity <= 1"><i class="bi bi-dash"></i></button>
@@ -99,8 +99,8 @@
                                     <!-- Desktop Price Column -->
                                     <div class="d-none d-md-flex align-items-center justify-content-end position-relative" style="width: 25%;">
                                         <div class="text-end pe-4">
-                                            <div class="fw-extrabold text-primary fs-5 mb-1">${{ (item.price * item.quantity).toFixed(2) }}</div>
-                                            <small class="text-muted">${{ item.price }} each</small>
+                                            <div class="fw-extrabold text-primary fs-5 mb-1">Rs. {{ (item.price * item.quantity).toFixed(2) }}</div>
+                                            <small class="text-muted">Rs. {{ item.price }} each</small>
                                         </div>
                                         <button 
                                             class="btn-close remove-item-btn-desktop position-absolute end-0" 
@@ -322,49 +322,106 @@
 
 
 
-                <!-- STEP 3: ORDER SUCCESS SCREEN -->
+                <!-- STEP 3: ORDER SUCCESS SCREEN (INVOICE) -->
                 <template v-else-if="step === 'success'">
                     <div class="col-12 fade-in-up">
-                        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 text-center bg-white">
-                            <div class="success-checkmark-wrapper mb-4">
-                                <div class="checkmark-circle">
-                                    <i class="bi bi-check-lg checkmark-icon"></i>
+                        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                            
+                            <!-- Invoice Header -->
+                            <div class="text-center mb-5">
+                                <div class="success-checkmark-wrapper mb-4 mx-auto">
+                                    <div class="checkmark-circle">
+                                        <i class="bi bi-check-lg checkmark-icon"></i>
+                                    </div>
                                 </div>
+                                <h2 class="fw-extrabold text-dark mb-2">Order Confirmed!</h2>
+                                <p class="text-muted fs-6">Thank you, <span class="fw-bold text-dark">{{ placedOrder?.shipping_name }}</span>. Your order has been received.</p>
                             </div>
-                            <h2 class="fw-extrabold text-dark mb-3">Order Placed Successfully!</h2>
-                            <p class="text-muted fs-5 mb-5 max-width-md mx-auto">
-                                Thank you for shopping with Lapzo. Your order has been registered and is being processed for shipment.
-                            </p>
 
-                            <div class="row justify-content-center mb-5">
-                                <div class="col-md-8 col-lg-6">
-                                    <div class="order-details-box rounded-4 p-4 text-start bg-light border">
-                                        <h5 class="fw-bold mb-3 border-bottom pb-3 text-dark"><i class="bi bi-receipt me-2 text-primary"></i> Receipt Details</h5>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Order ID:</span>
-                                            <span class="fw-bold text-dark">#LPZ-{{ placedOrder?.id || '9873' }}</span>
+                            <!-- Invoice Body -->
+                            <div class="invoice-container border rounded-4 overflow-hidden mb-5 max-width-md mx-auto position-relative bg-light">
+                                <!-- Top Accent -->
+                                <div class="bg-primary" style="height: 6px; width: 100%;"></div>
+                                
+                                <div class="p-4 p-md-5">
+                                    <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4 flex-wrap gap-3">
+                                        <div>
+                                            <h4 class="fw-extrabold text-dark mb-1">INVOICE</h4>
+                                            <p class="text-muted small mb-0">Order #LPZ-{{ placedOrder?.id?.substring(0,8).toUpperCase() || 'N/A' }}</p>
                                         </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Grand Total:</span>
-                                            <span class="fw-bold text-primary">${{ Number(placedOrder?.total_amount || total).toFixed(2) }}</span>
+                                        <div class="text-start text-sm-end">
+                                            <p class="fw-semibold text-dark mb-1">Date: <span class="fw-normal">{{ new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }}</span></p>
+                                            <p class="fw-semibold text-dark mb-0">Status: <span class="badge bg-success-subtle text-success border border-success-subtle">Payment Verified</span></p>
                                         </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Payment:</span>
-                                            <span class="fw-semibold text-dark">{{ placedOrder?.payment_method === 'COD' ? 'Cash on Delivery' : 'Email Invoice' }}</span>
+                                    </div>
+
+                                    <div class="row g-4 mb-4">
+                                        <div class="col-sm-6">
+                                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Customer Details</h6>
+                                            <p class="text-dark fw-bold mb-1">{{ placedOrder?.shipping_name }}</p>
+                                            <p class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i> {{ placedOrder?.contact_email }}</p>
+                                            <p class="text-muted small mb-0"><i class="bi bi-telephone me-1"></i> {{ placedOrder?.contact_phone }}</p>
                                         </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span class="text-muted">Shipping to:</span>
-                                            <span class="fw-semibold text-dark text-truncate ms-3 text-end" style="max-width: 200px;">{{ placedOrder?.shipping_address }}</span>
+                                        <div class="col-sm-6 text-sm-end">
+                                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Shipping & Payment</h6>
+                                            <p class="text-dark small mb-1">{{ placedOrder?.shipping_address }}<span v-if="placedOrder?.shipping_address_line2">, {{ placedOrder?.shipping_address_line2 }}</span></p>
+                                            <p class="text-dark small mb-2">{{ placedOrder?.shipping_city }}, {{ placedOrder?.shipping_country }}</p>
+                                            <span class="badge bg-light border text-dark fw-bold"><i class="bi bi-credit-card-fill me-1 text-primary"></i> {{ placedOrder?.payment_method }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ordered Items Table -->
+                                    <div class="table-responsive mb-4 rounded-3 border">
+                                        <table class="table table-borderless table-striped mb-0 align-middle">
+                                            <thead class="table-light border-bottom">
+                                                <tr>
+                                                    <th class="small fw-bold text-muted text-uppercase py-3">Item Description</th>
+                                                    <th class="small fw-bold text-muted text-uppercase py-3 text-center">Qty</th>
+                                                    <th class="small fw-bold text-muted text-uppercase py-3 text-end">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="item in placedOrder?.items" :key="item.id">
+                                                    <td class="py-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="me-3 bg-white border rounded d-flex align-items-center justify-content-center p-1" style="width: 40px; height: 40px;">
+                                                                <img :src="item.product?.thumbnail" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                            </div>
+                                                            <div class="fw-semibold text-dark small" style="max-width: 200px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{ item.product?.title }}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-3 text-center small fw-medium text-muted">{{ item.quantity }}</td>
+                                                    <td class="py-3 text-end small fw-bold text-dark">Rs. {{ Number(item.price * item.quantity).toFixed(2) }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Totals -->
+                                    <div class="row justify-content-end">
+                                        <div class="col-sm-7 col-md-6 col-lg-5">
+                                            <div class="d-flex justify-content-between mb-2 small text-muted">
+                                                <span>Subtotal</span>
+                                                <span class="fw-medium text-dark">Rs. {{ Number(placedOrder?.total_amount || 0).toFixed(2) }}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-3 small text-success">
+                                                <span>Shipping</span>
+                                                <span class="fw-medium">Free</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-top pt-3">
+                                                <span class="fw-bold text-dark">Grand Total</span>
+                                                <span class="fw-extrabold text-primary fs-5">Rs. {{ Number(placedOrder?.total_amount || 0).toFixed(2) }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
-                                <router-link to="/orders" class="btn btn-primary rounded-pill px-4 py-3 fw-bold shadow-sm hover-lift">
-                                    <i class="bi bi-bag-check me-2"></i> Track My Order
-                                </router-link>
-                                <router-link to="/laptops" class="btn btn-outline-secondary rounded-pill px-4 py-3 fw-bold">
+                                <button onclick="window.print()" class="btn btn-primary rounded-pill px-4 py-3 fw-bold shadow-sm hover-lift d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-printer-fill me-2"></i> Print Invoice
+                                </button>
+                                <router-link to="/laptops" class="btn btn-outline-secondary rounded-pill px-4 py-3 fw-bold d-flex align-items-center justify-content-center">
                                     Continue Shopping
                                 </router-link>
                             </div>

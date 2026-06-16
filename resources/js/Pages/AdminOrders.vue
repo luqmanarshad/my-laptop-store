@@ -59,7 +59,7 @@
                                 <td>
                                     <div class="small fw-medium">{{ order.payment_method }}</div>
                                 </td>
-                                <td class="fw-bold text-primary">${{ Number(order.payment_amount || order.total || 0).toFixed(2) }}</td>
+                                <td class="fw-bold text-primary">Rs. {{ Number(order.payment_amount || order.total || 0).toFixed(2) }}</td>
                                 <td>
                                     <select class="form-select form-select-sm rounded-3" v-model="order.status" @change="updateOrderStatus(order.id, order.status)" style="width: 120px;">
                                         <option value="Pending">Pending</option>
@@ -110,9 +110,9 @@
                                                 <img :src="item.product?.thumbnail" style="width: 40px; height: 40px; object-fit: contain;" class="bg-white border rounded p-1 me-2" />
                                                 <div class="small lh-sm flex-grow-1">
                                                     <div class="fw-semibold text-truncate" style="max-width: 150px;">{{ item.product?.title }}</div>
-                                                    <div class="text-muted">{{ item.quantity }} x ${{ item.price }}</div>
+                                                    <div class="text-muted">{{ item.quantity }} x Rs. {{ item.price }}</div>
                                                 </div>
-                                                <div class="fw-bold small">${{ (item.quantity * item.price).toFixed(2) }}</div>
+                                                <div class="fw-bold small">Rs. {{ (item.quantity * item.price).toFixed(2) }}</div>
                                             </div>
                                         </div>
                                     </div>

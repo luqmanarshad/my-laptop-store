@@ -152,8 +152,8 @@
 
                             <div class="filter-options mt-3" v-show="sections.price">
                                 <div class="price-labels d-flex justify-content-between mb-2 text-primary fw-bold">
-                                    <span>${{ priceRange.min }}</span>
-                                    <span>${{ selectedPriceMax }}</span>
+                                    <span>Rs. {{ priceRange.min }}</span>
+                                    <span>Rs. {{ selectedPriceMax }}</span>
                                 </div>
 
                                 <input
