@@ -21,6 +21,7 @@ import Register from './Pages/Register.vue'
 import ProductDetails from './Pages/ProductDetails.vue'
 import Cart from './Pages/Cart.vue'
 import Orders from './Pages/Orders.vue'
+import AdminOrders from './Pages/AdminOrders.vue'
 
 import { store } from './utils/store'
 
@@ -95,6 +96,11 @@ const router = createRouter({
             path: '/orders',
             component: Orders,
             meta: { requiresAuth: true }
+        },
+        {
+            path: '/admin/orders',
+            component: AdminOrders,
+            meta: { requiresAuth: true, requiresAdmin: true }
         }
     ],
 })

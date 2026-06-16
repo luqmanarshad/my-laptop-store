@@ -6,12 +6,13 @@
                 <p class="text-muted">Create, search, edit, and delete laptops from the inventory.</p>
             </div>
 
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <router-link to="/admin/orders" class="btn btn-primary px-4 rounded-3 fw-bold">
+                    <i class="bi bi-box-seam"></i> View All Orders
+                </router-link>
                 <button class="btn btn-outline-secondary px-4 rounded-3" type="button" @click="logout">
                     Logout
                 </button>
-                <router-link to="/wishlist" class="btn btn-outline-primary px-3 rounded-3">Wishlist</router-link>
-                <router-link to="/compare" class="btn btn-outline-primary px-3 rounded-3">Compare</router-link>
             </div>
         </div>
 
