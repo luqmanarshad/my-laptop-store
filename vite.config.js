@@ -21,9 +21,16 @@ export default defineConfig({
         chunkSizeWarningLimit: 1000,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    'vendor-vue': ['vue', 'vue-router'],
-                    'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+                manualChunks(id) {
+                    if (id.includes('node_modules/vue') || id.includes('node_modules/vue-router')) {
+                        return 'vendor-vue';
+                    }
+                    if (id.includes('node_modules/firebase')) {
+                        return 'vendor-firebase';
+                    }
+                    if (id.includes('node_modules/axios')) {
+                        return 'vendor-axios';
+                    }
                 },
             },
         },
