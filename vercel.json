@@ -1,18 +1,44 @@
 {
   "version": 2,
+  "outputDirectory": "public",
+  "headers": [
+    {
+      "source": "/build/assets/(.*)\\.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/build/assets/(.*)\\.css",
+      "headers": [
+        { "key": "Content-Type", "value": "text/css; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/build/assets/(.*)\\.woff2",
+      "headers": [
+        { "key": "Content-Type", "value": "font/woff2" }
+      ]
+    },
+    {
+      "source": "/build/assets/(.*)\\.woff",
+      "headers": [
+        { "key": "Content-Type", "value": "font/woff" }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "/build/(.*)",
       "dest": "/build/$1"
     },
     {
-      "src": "/(.*\\.(js|css|woff|woff2|png|jpg|jpeg|gif|svg|ico))",
+      "src": "/(.*\\.(js|mjs|css|woff|woff2|png|jpg|jpeg|gif|svg|ico))",
       "dest": "/$1"
     },
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "outputDirectory": "public"
+  ]
 }
