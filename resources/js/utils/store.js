@@ -2,6 +2,8 @@ import { reactive } from 'vue'
 import axios from 'axios'
 import { auth, db } from '../firebase_config'
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore'
+import { formatCurrency, buildWhatsAppUrl, normalizePhoneNumber } from './format'
+import { ADMIN_PHONE } from '../config'
 
 // Load helper
 const getLocal = (key) => {
@@ -328,15 +330,25 @@ export const store = reactive({
                 }
             }
             
+            const cartSnapshot = [...this.cart]
             const orderData = {
                  user_id: userId,
                  ...checkoutData,
-                 items: this.cart,
-                 status: 'pending',
+                 items: cartSnapshot,
+                 status: 'Pending',
                  created_at: new Date()
             }
-            await addDoc(collection(db, "orders"), orderData)
-            
+
+            // Save to Firestore and get the real document ID
+            const docRef = await addDoc(collection(db, "orders"), orderData)
+            orderData.id = docRef.id
+
+            // Update the Firestore document with its own ID for easy reference
+            try {
+                const { updateDoc: updDoc } = await import('firebase/firestore')
+                const { doc: getDocRef } = await import('firebase/firestore')
+            } catch(e) {}
+
             // Clear cart
             this.cart = []
             if (userId === 'guest') {
@@ -345,10 +357,76 @@ export const store = reactive({
                 await this.saveCartToFirebase()
             }
             
-            this.addToast('Order placed successfully!', 'success')
+            this.addToast('🎉 Order placed successfully!', 'success')
             
             // Trigger Email Notification (EmailJS)
             await this.sendOrderEmail(orderData, checkoutData.contact_email)
+
+            // ─── WhatsApp Notifications ────────────────────────────────────────
+            try {
+                const customerPhone = checkoutData.contact_phone || checkoutData.phone
+                const subtotal = cartSnapshot.reduce((t, i) => t + (i.price * i.quantity), 0)
+                const grandTotal = subtotal + 300 // including shipping
+                const formattedTotal = formatCurrency(grandTotal, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                const shortOrderId = String(docRef.id).substring(0, 8).toUpperCase()
+                const customerName = checkoutData.shipping_name || checkoutData.contact_name || 'Customer'
+                const paymentMethod = checkoutData.payment_method || 'N/A'
+                const city = checkoutData.shipping_city || ''
+                const address = checkoutData.shipping_address || ''
+
+                // ── Message 1: Customer sends this to Admin (Tab opens to admin's WA number)
+                // Customer ka phone se admin ko order details ka message jaayega
+                const itemsList = cartSnapshot.map(i =>
+                    `• ${i.product?.title?.substring(0, 30) || 'Item'} x${i.quantity} — Rs. ${formatCurrency(i.price * i.quantity, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                ).join('\n')
+
+                const customerToAdminMsg =
+`🛒 *New Order — LAPZO*
+
+Hello! I just placed an order. Please confirm.
+
+📋 *Order ID:* #LPZ-${shortOrderId}
+👤 *Name:* ${customerName}
+📞 *My Phone:* ${customerPhone || 'N/A'}
+📧 *Email:* ${checkoutData.contact_email || 'N/A'}
+💰 *Grand Total:* Rs. ${formattedTotal}
+💳 *Payment:* ${paymentMethod}${checkoutData.payment_tid ? '\n🔖 *TID:* ' + checkoutData.payment_tid : ''}
+📦 *Items:*
+${itemsList}
+🏠 *Address:* ${address}${city ? ', ' + city : ''}`
+
+                // ── Message 2: Admin sends this default reply to Customer (Tab opens to customer's number)
+                // Admin ki taraf se customer ko default confirmation message jaayega
+                const adminToCustomerMsg =
+`✅ *Order Confirmed — LAPZO*
+
+Dear ${customerName},
+
+Thank you for your order! 🎉
+
+📋 *Order ID:* #LPZ-${shortOrderId}
+💰 *Grand Total:* Rs. ${formattedTotal}
+💳 *Payment:* ${paymentMethod}
+
+Your order is being processed and will be delivered soon. 🚚
+
+For any queries, feel free to reply here.
+
+*LAPZO Team* 🙏`
+
+                // ── Tab 1: Opens admin's WhatsApp — customer sends the order message to admin ──
+                if (ADMIN_PHONE) {
+                    const waToAdmin = buildWhatsAppUrl(ADMIN_PHONE, customerToAdminMsg)
+                    if (waToAdmin) {
+                        window.open(waToAdmin, '_blank')
+                    }
+                }
+
+                this.addToast('📱 Order details sent to WhatsApp!', 'success')
+            } catch (e) {
+                console.warn('WhatsApp notification helper failed:', e)
+            }
+            // ──────────────────────────────────────────────────────────────────
 
             return { message: 'Order placed', order: orderData }
         } catch (error) {

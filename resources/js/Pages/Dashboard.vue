@@ -1,8 +1,19 @@
 <template>
     <div class="d-flex min-vh-100 bg-light">
         
+        <!-- Mobile overlay -->
+        <div
+            v-if="isSidebarOpen"
+            class="admin-overlay"
+            @click="closeSidebar"
+        ></div>
+
         <!-- Sidebar -->
-        <aside class="admin-sidebar bg-slate-900 text-white p-4 d-flex flex-column" style="width: 280px; flex-shrink: 0; min-height: 100vh; background: #0f172a; border-right: 1px solid #1e293b;">
+        <aside
+            class="admin-sidebar bg-slate-900 text-white p-4 d-flex flex-column"
+            :class="{ 'sidebar-open': isSidebarOpen }"
+            style="width: 280px; flex-shrink: 0; min-height: 100vh; background: #0f172a; border-right: 1px solid #1e293b;"
+        >
             <div class="d-flex align-items-center mb-5 gap-2 px-2">
                 <div class="admin-logo-box bg-primary text-white d-flex align-items-center justify-content-center rounded-3" style="width: 40px; height: 40px; font-size: 20px;">
                     <i class="bi bi-laptop"></i>
@@ -11,13 +22,23 @@
                     <h5 class="fw-bold mb-0 text-white tracking-wider">LAPZO</h5>
                     <small class="text-slate-400 text-uppercase" style="font-size: 0.65rem; color: #94a3b8;">Admin Portal</small>
                 </div>
+
+                <!-- Mobile close button -->
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-light ms-auto d-md-none"
+                    @click="closeSidebar"
+                    aria-label="Close sidebar"
+                >
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
 
             <nav class="flex-grow-1 d-flex flex-column gap-2">
                 <button 
                     class="nav-link-btn d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-start text-white w-100"
                     :class="{ 'active': activeTab === 'overview' }"
-                    @click="activeTab = 'overview'"
+                    @click="() => { activeTab = 'overview'; closeSidebar(); }"
                 >
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard Overview</span>
@@ -26,7 +47,7 @@
                 <button 
                     class="nav-link-btn d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-start text-white w-100"
                     :class="{ 'active': activeTab === 'products' }"
-                    @click="activeTab = 'products'"
+                    @click="() => { activeTab = 'products'; closeSidebar(); }"
                 >
                     <i class="bi bi-grid-3x3-gap"></i>
                     <span>Product Manager</span>
@@ -35,6 +56,7 @@
                 <router-link 
                     to="/admin/orders" 
                     class="nav-link-btn d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-start text-white w-100 text-decoration-none"
+                    @click="closeSidebar"
                 >
                     <i class="bi bi-box-seam"></i>
                     <span>Order Manager</span>
@@ -45,6 +67,7 @@
                 <router-link 
                     to="/" 
                     class="nav-link-btn d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-start text-white w-100 text-decoration-none"
+                    @click="closeSidebar"
                 >
                     <i class="bi bi-shop"></i>
                     <span>Go to storefront</span>
@@ -71,17 +94,29 @@
         <!-- Main Content Area -->
         <main class="flex-grow-1 p-4 p-md-5 overflow-auto" style="max-height: 100vh;">
             
+            <!-- Mobile top bar (sidebar toggle) -->
+            <div class="d-flex align-items-center mb-4 d-md-none">
+                <button
+                    type="button"
+                    class="btn btn-outline-primary rounded-3 px-3 py-2 fw-bold"
+                    @click="openSidebar"
+                >
+                    <i class="bi bi-list me-2"></i> Menu
+                </button>
+            </div>
+
             <!-- OVERVIEW TAB -->
             <div v-if="activeTab === 'overview'" class="fade-in">
-                <div class="d-flex justify-content-between align-items-center mb-5">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 mb-sm-5 gap-3">
                     <div>
-                        <h1 class="fw-extrabold text-dark mb-1">Welcome Back, Admin!</h1>
-                        <p class="text-muted">Here is a quick overview of your laptop store's performance today.</p>
+                        <h1 class="fw-extrabold text-dark mb-1" style="font-size: 1.6rem;">Welcome Back, Admin!</h1>
+                        <p class="text-muted mb-0">Here is a quick overview of your laptop store's performance today.</p>
                     </div>
-                    <button class="btn btn-primary rounded-3 px-4 py-2.5 fw-bold" @click="refreshAllData">
+                    <button type="button" class="btn btn-primary rounded-3 px-4 py-2.5 fw-bold" @click="refreshAllData">
                         <i class="bi bi-arrow-clockwise"></i> Refresh Stats
                     </button>
                 </div>
+
 
                 <!-- KPI Cards -->
                 <div class="row g-4 mb-5">
@@ -93,7 +128,7 @@
                                     <i class="bi bi-wallet2 fs-5"></i>
                                 </div>
                             </div>
-                            <h3 class="fw-extrabold mb-1">Rs. {{ totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</h3>
+                            <h3 class="fw-extrabold mb-1">Rs. {{ formatCurrency(totalRevenue, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</h3>
                             <span class="text-muted small">Lifetime earnings (Excl. cancelled)</span>
                         </div>
                     </div>
@@ -170,7 +205,7 @@
                                         <tr v-for="order in recentOrders" :key="order.id">
                                             <td class="fw-bold small">#{{ order.id.substring(0,8).toUpperCase() }}</td>
                                             <td>{{ order.shipping_name }}</td>
-                                            <td class="fw-bold text-primary">Rs. {{ Number(order.total_amount || order.total || 0).toFixed(2) }}</td>
+                                            <td class="fw-bold text-primary">Rs. {{ formatCurrency(Number(order.total_amount || order.total || 0), { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</td>
                                             <td>
                                                 <span class="badge rounded-pill px-2.5 py-1" :class="getStatusBadgeClass(order.status)">
                                                     {{ order.status }}
@@ -433,7 +468,7 @@
                                             </td>
                                             <td>{{ product.brand?.name }}</td>
                                             <td>{{ product.category?.name }}</td>
-                                            <td class="fw-bold text-primary">Rs. {{ product.sale_price || product.price }}</td>
+                                            <td class="fw-bold text-primary">Rs. {{ formatCurrency(product.sale_price || product.price, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</td>
                                             <td>
                                                 <span :class="{'text-danger fw-bold': product.stock === 0}">{{ product.stock }}</span>
                                             </td>
@@ -464,15 +499,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { db, auth } from '../firebase_config'
 import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { store } from '../utils/store'
+import { formatCurrency } from '../utils/format'
 
 const router = useRouter()
 const route = useRoute()
 const activeTab = ref('overview') // 'overview', 'products'
+
+// Mobile sidebar toggle
+const isSidebarOpen = ref(false)
+const openSidebar = () => { isSidebarOpen.value = true }
+const closeSidebar = () => { isSidebarOpen.value = false }
+
+watch(activeTab, () => {
+    // close sidebar when tab changes (mobile UX)
+    closeSidebar()
+})
+
 
 // Data sources
 const products = ref([])
@@ -772,11 +819,48 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.55);
+    z-index: 40;
+}
+
 .admin-sidebar {
     height: 100vh;
     position: sticky;
     top: 0;
+    transition: transform 0.2s ease;
 }
+
+/* Mobile off-canvas */
+@media (max-width: 767.98px) {
+    .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-100%);
+        z-index: 50;
+        box-shadow: 0 12px 40px rgba(2, 6, 23, 0.35);
+    }
+    .admin-sidebar.sidebar-open {
+        transform: translateX(0);
+    }
+
+    main {
+        padding: 0.9rem !important;
+    }
+
+    /* Tighten table typography */
+    table {
+        font-size: 0.92rem;
+    }
+
+    h1 {
+        font-size: 1.35rem;
+    }
+}
+
 
 .nav-link-btn {
     background: transparent;

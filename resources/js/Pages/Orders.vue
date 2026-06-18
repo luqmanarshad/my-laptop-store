@@ -42,10 +42,10 @@
                                     <span class="text-muted text-xs d-block mb-1 tracking-wider fw-semibold">DATE PLACED</span>
                                     <span class="fw-semibold text-dark">{{ formatDate(order.created_at) }}</span>
                                 </div>
-                                <div class="ms-md-auto text-md-end w-100 w-md-auto d-flex justify-content-between justify-content-md-end align-items-center gap-4 mt-2 mt-md-0">
+                                        <div class="ms-md-auto text-md-end w-100 w-md-auto d-flex justify-content-between justify-content-md-end align-items-center gap-4 mt-2 mt-md-0">
                                     <div>
                                         <span class="text-muted text-xs d-block mb-1 tracking-wider fw-semibold text-start text-md-end">TOTAL</span>
-                                        <span class="fw-extrabold text-primary fs-5">${{ Number(order.total_amount).toFixed(2) }}</span>
+                                        <span class="fw-extrabold text-primary fs-5">Rs. {{ formatCurrency(Number(order.total_amount)) }}</span>
                                     </div>
                                     <div class="text-end">
                                         <span :class="['badge rounded-pill px-3 py-2 fw-bold text-uppercase text-xs border', getStatusClass(order.status)]">
@@ -72,14 +72,14 @@
                                             <div class="item-img-wrapper rounded-3 border bg-white p-2 d-flex align-items-center justify-content-center shadow-sm">
                                                 <img :src="item.product?.thumbnail" class="item-img" :alt="item.product?.title">
                                             </div>
-                                            <div class="ms-3 flex-grow-1 pe-2">
-                                                <h6 class="fw-bold text-dark mb-1 text-truncate-2" style="font-size: 0.95rem;">{{ item.product?.title }}</h6>
-                                                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded" style="font-size: 0.7rem;">{{ item.product?.brand?.name || 'N/A' }}</span>
-                                            </div>
-                                            <div class="text-end ms-auto min-w-max text-nowrap">
-                                                <span class="fw-extrabold text-dark d-block">${{ Number(item.price * item.quantity).toFixed(2) }}</span>
-                                                <span class="text-muted text-xs">{{ item.quantity }} x ${{ Number(item.price).toFixed(2) }}</span>
-                                            </div>
+                                                <div class="ms-3 flex-grow-1 pe-2">
+                                                    <h6 class="fw-bold text-dark mb-1 text-truncate-2" style="font-size: 0.95rem;">{{ item.product?.title }}</h6>
+                                                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded" style="font-size: 0.7rem;">{{ item.product?.brand?.name || 'N/A' }}</span>
+                                                </div>
+                                                <div class="text-end ms-auto min-w-max text-nowrap">
+                                                    <span class="fw-extrabold text-dark d-block">Rs. {{ formatCurrency(item.price * item.quantity, {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
+                                                    <span class="text-muted text-xs">{{ item.quantity }} x Rs. {{ formatCurrency(Number(item.price), {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -107,7 +107,7 @@
                                                 <span class="text-muted text-xs d-block mb-1 tracking-wider fw-semibold">CONTACT PHONE</span>
                                                 <div class="d-flex align-items-center">
                                                     <i class="bi bi-telephone-fill text-muted me-2"></i>
-                                                    <span class="text-dark small fw-medium">{{ order.phone || 'N/A' }}</span>
+                                                    <span class="text-dark small fw-medium">{{ order.contact_phone || order.phone || 'N/A' }}</span>
                                                 </div>
                                             </div>
                                             <div class="col-sm-6">
@@ -138,6 +138,7 @@ import { db, auth } from '../firebase_config'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import MainLayout from '../Layouts/MainLayout.vue'
 import { store } from '../utils/store'
+import { formatCurrency } from '../utils/format'
 
 const orders = ref([])
 const loading = ref(true)

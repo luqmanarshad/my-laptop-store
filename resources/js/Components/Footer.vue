@@ -1,26 +1,22 @@
 <template>
-    <footer class="footer-premium mt-5">
-        <!-- Top Wave Divider -->
-        <div class="footer-wave">
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
-            </svg>
-        </div>
+    <footer class="footer-premium mt-auto">
+        <!-- Clean Gradient Divider -->
+        <div class="footer-divider-top"></div>
 
-        <div class="container footer-content pt-5 pb-4">
-            <div class="row g-4 mb-5">
+        <div class="container footer-content py-4 py-md-5">
+            <div class="row g-4 mb-4">
                 <!-- Column 1: Brand & About -->
-                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="logo-box-footer me-2">
+                <div class="col-12 col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center mb-3 mb-md-4 gap-2">
+                        <div class="logo-box-footer me-1 me-md-2">
                             <i class="bi bi-laptop"></i>
                         </div>
                         <h2 class="brand-name-footer mb-0">Lapzo</h2>
                     </div>
-                    <p class="text-gray-400 mb-4 pe-lg-4">
-                        Your ultimate destination for high-performance laptops. We bring you the best deals on gaming, business, and creator laptops with worldwide shipping.
+                    <p class="text-gray-400 mb-4 mb-md-4 pe-lg-4" style="line-height:1.7;">
+                        Your ultimate destination for high-performance laptops. We bring you the best deals on gaming, business, and creator laptops.
                     </p>
-                    <div class="social-links d-flex gap-3">
+                    <div class="social-links d-flex gap-2 gap-md-3 flex-wrap">
                         <a href="#" class="social-icon" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
                         <a href="#" class="social-icon" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
                         <a href="#" class="social-icon" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
@@ -29,20 +25,20 @@
                 </div>
 
                 <!-- Column 2: Quick Links -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title mb-4">Quick Links</h5>
+                <div class="col-6 col-lg-2 col-md-3">
+                    <h5 class="footer-title mb-3 mb-md-4">Quick Links</h5>
                     <ul class="footer-links list-unstyled">
                         <li><router-link to="/">Home</router-link></li>
                         <li><router-link to="/laptops">All Laptops</router-link></li>
                         <li><router-link to="/deals">Special Deals</router-link></li>
-                        <li><router-link to="/support">Support Center</router-link></li>
+                        <li><router-link to="/support">Support</router-link></li>
                         <li><router-link to="/login">Sign In</router-link></li>
                     </ul>
                 </div>
 
                 <!-- Column 3: Categories -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
-                    <h5 class="footer-title mb-4">Categories</h5>
+                <div class="col-6 col-lg-2 col-md-3">
+                    <h5 class="footer-title mb-3 mb-md-4">Categories</h5>
                     <ul class="footer-links list-unstyled">
                         <li><router-link to="/laptops?category=Gaming">Gaming</router-link></li>
                         <li><router-link to="/laptops?category=Business">Business</router-link></li>
@@ -52,46 +48,47 @@
                     </ul>
                 </div>
 
-                <!-- Column 4: Newsletter -->
-                <div class="col-lg-4 col-md-6">
-                    <h5 class="footer-title mb-4">Stay Updated</h5>
-                    <p class="text-gray-400 mb-3">Subscribe to our newsletter for the latest tech news and exclusive offers.</p>
+                <!-- Column 4: Contact & Newsletter -->
+                <div class="col-12 col-lg-4 col-md-6">
+                    <h5 class="footer-title mb-3 mb-md-4">Stay Updated</h5>
+                    <p class="text-gray-400 mb-3" style="font-size:0.85rem;">Subscribe for the latest tech news and exclusive offers.</p>
                     <form @submit.prevent="subscribe" class="newsletter-form position-relative mb-4">
                         <input type="email" class="form-control" placeholder="Enter your email" required>
                         <button type="submit" class="btn btn-primary subscribe-btn">
                             <i class="bi bi-send-fill"></i>
                         </button>
                     </form>
-                    <div class="payment-methods mt-4">
-                        <span class="text-gray-400 d-block mb-2 small">Secure Payments</span>
-                        <div class="d-flex gap-2 text-gray-500 fs-3">
-                            <i class="bi bi-credit-card-2-front-fill"></i>
-                            <i class="bi bi-paypal"></i>
-                            <i class="bi bi-stripe"></i>
-                            <i class="bi bi-apple"></i>
+                    <div class="contact-info">
+                        <div class="d-flex align-items-center gap-2 mb-2 text-gray-400" style="font-size:0.8rem;">
+                            <i class="bi bi-telephone-fill text-primary"></i>
+                            <span>+92 336 400 3281</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-gray-400" style="font-size:0.8rem;">
+                            <i class="bi bi-geo-alt-fill text-primary"></i>
+                            <span>Narowal, Punjab, Pakistan</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <hr class="footer-divider mb-4">
+            <hr class="footer-hr mb-3 mb-md-4">
 
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    <p class="mb-0 text-gray-500 small">
-                        &copy; 2026 Lapzo Store. All rights reserved.
+            <div class="row align-items-center g-2">
+                <div class="col-12 col-md-6 text-center text-md-start">
+                    <p class="mb-2 mb-md-0 text-gray-500 small">
+                        &copy; 2026 <span class="text-white fw-semibold">Lapzo</span> Store. All rights reserved.
                     </p>
                 </div>
-                <div class="col-md-6 text-center text-md-end">
+                <div class="col-12 col-md-6 text-center text-md-end">
                     <ul class="list-inline mb-0 small text-gray-500">
                         <li class="list-inline-item"><a href="#" class="text-gray-500 text-decoration-none hover-white">Privacy Policy</a></li>
-                        <li class="list-inline-item mx-2">&bull;</li>
+                        <li class="list-inline-item mx-1 mx-md-2">&bull;</li>
                         <li class="list-inline-item"><a href="#" class="text-gray-500 text-decoration-none hover-white">Terms of Service</a></li>
                     </ul>
                 </div>
             </div>
         </div>
-        
+
         <!-- Back to Top Button -->
         <button @click="scrollToTop" class="back-to-top" :class="{ 'show': showBackToTop }" aria-label="Back to top">
             <i class="bi bi-arrow-up"></i>
@@ -113,7 +110,6 @@ const scrollToTop = () => {
 };
 
 const subscribe = () => {
-    // Basic interaction for demo
     alert('Thank you for subscribing to our newsletter!');
 };
 
@@ -128,66 +124,45 @@ onUnmounted(() => {
 
 <style scoped>
 .footer-premium {
-    background-color: var(--dark);
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
     position: relative;
-    margin-top: 100px;
 }
 
-.footer-wave {
-    position: absolute;
-    top: 0;
-    left: 0;
+.footer-divider-top {
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #0ea5e9 100%);
     width: 100%;
-    overflow: hidden;
-    line-height: 0;
-    transform: translateY(-99%);
-}
-
-.footer-wave svg {
-    position: relative;
-    display: block;
-    width: calc(100% + 1.3px);
-    height: 60px;
-}
-
-.footer-wave .shape-fill {
-    fill: var(--dark);
 }
 
 .logo-box-footer {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     background: var(--primary);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 24px;
+    font-size: 20px;
+    flex-shrink: 0;
 }
 
 .brand-name-footer {
     color: white;
     font-weight: 800;
-    font-size: 28px;
+    font-size: 1.5rem;
     letter-spacing: -0.5px;
 }
 
-.text-gray-400 {
-    color: #9ca3af;
-    line-height: 1.7;
-}
-
-.text-gray-500 {
-    color: #6b7280;
-}
+.text-gray-400 { color: #9ca3af; }
+.text-gray-500 { color: #6b7280; }
 
 .footer-title {
     color: white;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     position: relative;
-    padding-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 .footer-title::after {
@@ -195,106 +170,97 @@ onUnmounted(() => {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 40px;
-    height: 3px;
+    width: 28px;
+    height: 2px;
     background: var(--primary);
     border-radius: 2px;
 }
 
-.footer-links li {
-    margin-bottom: 12px;
-}
+.footer-links li { margin-bottom: 8px; }
 
 .footer-links a {
     color: #9ca3af;
     text-decoration: none;
+    font-size: 0.85rem;
     transition: var(--transition);
     display: inline-block;
 }
 
 .footer-links a:hover {
-    color: var(--primary-light);
-    transform: translateX(5px);
+    color: #60a5fa;
+    transform: translateX(4px);
 }
 
 .social-icon {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.07);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #9ca3af;
     text-decoration: none;
     transition: var(--transition);
-    font-size: 18px;
+    font-size: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
 }
 
 .social-icon:hover {
     background: var(--primary);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(37,99,235,0.3);
     color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+    border-color: transparent;
 }
 
 .newsletter-form .form-control {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
     color: white;
-    padding: 14px 20px;
-    padding-right: 60px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    padding-right: 44px;
+    border-radius: 8px;
+    font-size: 0.85rem;
 }
 
 .newsletter-form .form-control:focus {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.09);
     border-color: var(--primary);
-    box-shadow: none;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+    color: white;
 }
 
-.newsletter-form .form-control::placeholder {
-    color: #6b7280;
-}
+.newsletter-form .form-control::placeholder { color: #6b7280; }
 
 .subscribe-btn {
     position: absolute;
-    right: 5px;
-    top: 5px;
-    height: calc(100% - 10px);
-    width: 44px;
+    right: 4px;
+    top: 4px;
+    height: calc(100% - 8px);
+    width: 36px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
 }
 
-.footer-divider {
-    border-color: rgba(255,255,255,0.1);
+.footer-hr {
+    border-color: rgba(255,255,255,0.08);
     opacity: 1;
 }
 
-.hover-white:hover {
-    color: white !important;
-}
+.hover-white:hover { color: white !important; }
 
-.payment-methods i {
-    transition: var(--transition);
-}
-
-.payment-methods i:hover {
-    color: white;
-    transform: scale(1.1);
-}
-
-/* Back to top button */
+/* Back to top */
 .back-to-top {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
+    bottom: 24px;
+    right: 24px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: var(--primary);
     color: white;
@@ -302,12 +268,12 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 16px;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(20px);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+    transform: translateY(16px);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 24px rgba(37,99,235,0.4);
     z-index: 999;
 }
 
@@ -319,31 +285,23 @@ onUnmounted(() => {
 
 .back-to-top:hover {
     background: var(--primary-dark);
-    transform: translateY(-5px);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(37,99,235,0.5);
 }
 
-@media (max-width: 767px) {
-    .footer-premium {
-        margin-top: 60px;
-    }
-    
-    .footer-wave svg {
-        height: 30px;
-    }
-    
-    .footer-content {
-        padding-top: 2rem !important;
-    }
-    
-    .footer-title {
-        margin-top: 1.5rem;
-    }
-    
-    .back-to-top {
-        bottom: 20px;
-        right: 20px;
-        width: 45px;
-        height: 45px;
-    }
+@media (max-width: 575px) {
+    .brand-name-footer { font-size: 1.35rem; }
+    .logo-box-footer { width: 34px; height: 34px; font-size: 18px; }
+    .footer-content { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+    .footer-title { font-size: 0.9rem; margin-top: 1.25rem; }
+    .footer-links a { font-size: 0.8rem; }
+    .social-icon { width: 32px; height: 32px; font-size: 13px; }
+    .back-to-top { bottom: 16px; right: 16px; width: 38px; height: 38px; }
+}
+
+@media (min-width: 768px) {
+    .brand-name-footer { font-size: 1.6rem; }
+    .logo-box-footer { width: 42px; height: 42px; font-size: 22px; }
+    .footer-title { font-size: 1rem; margin-top: 0; }
 }
 </style>

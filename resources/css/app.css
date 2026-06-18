@@ -105,6 +105,66 @@ img {
     .fs-5 { font-size: 1rem !important; }
 }
 
+/* Invoice responsive improvements */
+.invoice-container {
+    max-width: 100%;
+}
+
+@media (max-width: 575px) {
+    .invoice-container .p-4.p-md-5 {
+        padding: 1.25rem !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .cart-title {
+        font-size: 1.75rem;
+    }
+    .img-wrapper {
+        width: 70px;
+        height: 70px;
+    }
+    .cart-img {
+        max-height: 55px;
+    }
+    .summary-card {
+        margin-top: 1rem;
+    }
+    .remove-item-btn-mobile {
+        top: 0.75rem;
+    }
+    .success-checkmark-wrapper {
+        margin-bottom: 1.5rem !important;
+    }
+    .checkmark-circle {
+        width: 70px;
+        height: 70px;
+    }
+    .checkmark-icon {
+        font-size: 32px;
+    }
+    h2.fw-extrabold {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 991px) {
+    .invoice-container {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+/* Ensure table is scrollable on small screens */
+@media (max-width: 575px) {
+    .table {
+        font-size: 0.85rem;
+    }
+    .table td, .table th {
+        padding: 0.5rem 0.25rem !important;
+    }
+}
+
 /* ===== Mobile Container Padding ===== */
 @media (max-width: 575px) {
     .container {

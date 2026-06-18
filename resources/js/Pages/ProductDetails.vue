@@ -77,13 +77,13 @@
                     <div class="price-box mb-4 p-3 p-md-4 rounded-4 bg-light border fade-in-up" style="animation-delay: 0.2s;">
                         <template v-if="product.sale_price">
                             <div class="d-flex align-items-center flex-wrap gap-2 gap-md-3">
-                                <span class="fs-1 fw-extrabold text-primary">Rs. {{ product.sale_price }}</span>
-                                <span class="text-decoration-line-through text-muted fs-5">Rs. {{ product.price }}</span>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded">Save Rs. {{ (product.price - product.sale_price).toFixed(2) }}</span>
+                                <span class="fs-1 fw-extrabold text-primary">Rs. {{ formatCurrency(product.sale_price, {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
+                                <span class="text-decoration-line-through text-muted fs-5">Rs. {{ formatCurrency(product.price, {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded">Save Rs. {{ formatCurrency(Math.abs(product.price - product.sale_price), {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
                             </div>
                         </template>
                         <template v-else>
-                            <span class="fs-1 fw-extrabold text-primary">Rs. {{ product.price }}</span>
+                            <span class="fs-1 fw-extrabold text-primary">Rs. {{ formatCurrency(product.price, {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
                         </template>
                     </div>
 
@@ -222,6 +222,7 @@ import { db } from '../firebase_config'
 import { doc, getDoc } from 'firebase/firestore'
 import MainLayout from '../Layouts/MainLayout.vue'
 import { store } from '../utils/store'
+import { formatCurrency } from '../utils/format'
 
 const route = useRoute()
 const product = ref({})

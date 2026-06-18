@@ -152,8 +152,8 @@
 
                             <div class="filter-options mt-3" v-show="sections.price">
                                 <div class="price-labels d-flex justify-content-between mb-2 text-primary fw-bold">
-                                    <span>Rs. {{ priceRange.min }}</span>
-                                    <span>Rs. {{ selectedPriceMax }}</span>
+                                    <span>Rs. {{ formatCurrency(priceRange.min, {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
+                                    <span>Rs. {{ formatCurrency(selectedPriceMax, {minimumFractionDigits:0,maximumFractionDigits:0}) }}</span>
                                 </div>
 
                                 <input
@@ -277,6 +277,7 @@ import { collection, getDocs } from 'firebase/firestore'
 
 import MainLayout from '../Layouts/MainLayout.vue'
 import ProductCard from '../Components/ProductCard.vue'
+import { formatCurrency } from '../utils/format'
 
 const route = useRoute()
 const brands = ref([])

@@ -10,9 +10,12 @@
       "_rolldown-runtime-lhHHWwHU.js"
     ]
   },
-  "_vendor-firebase-BqZ1g7f4.js": {
-    "file": "assets/vendor-firebase-BqZ1g7f4.js",
-    "name": "vendor-firebase"
+  "_vendor-firebase-Xe00fKui.js": {
+    "file": "assets/vendor-firebase-Xe00fKui.js",
+    "name": "vendor-firebase",
+    "imports": [
+      "_rolldown-runtime-lhHHWwHU.js"
+    ]
   },
   "_vendor-vue-DdBkSJ_r.js": {
     "file": "assets/vendor-vue-DdBkSJ_r.js",
@@ -27,17 +30,20 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "resources/js/app.js": {
-    "file": "assets/app-NkVGEAdv.js",
+    "file": "assets/app-ByVDZHPi.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_vendor-firebase-BqZ1g7f4.js",
+      "_vendor-firebase-Xe00fKui.js",
       "_vendor-vue-DdBkSJ_r.js",
       "_vendor-axios-DAfjXC9L.js"
     ],
+    "dynamicImports": [
+      "_vendor-firebase-Xe00fKui.js"
+    ],
     "css": [
-      "assets/app-CDecvPyB.css"
+      "assets/app-BMRLUEEd.css"
     ],
     "assets": [
       "assets/bootstrap-icons-mSm7cUeB.woff2",

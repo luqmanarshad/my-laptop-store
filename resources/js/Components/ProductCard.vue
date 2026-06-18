@@ -47,11 +47,11 @@
             <div class="mt-auto pt-3 pb-3">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="current-price">
-                        Rs. {{ product.sale_price || product.price }}
+                        Rs. {{ formatCurrency(product.sale_price || product.price, {minimumFractionDigits:0,maximumFractionDigits:0}) }}
                     </span>
 
                     <span v-if="product.sale_price" class="old-price text-decoration-line-through text-muted small">
-                        Rs. {{ product.price }}
+                        Rs. {{ formatCurrency(product.price, {minimumFractionDigits:0,maximumFractionDigits:0}) }}
                     </span>
 
                     <span v-if="product.sale_price" class="discount-badge d-none d-sm-inline-block">
@@ -75,6 +75,7 @@
 
 <script setup>
 import { store } from '../utils/store'
+import { formatCurrency } from '../utils/format'
 
 defineProps({
     id: [Number, String],
